@@ -1,0 +1,6 @@
+{
+    "template1": {
+        "text": "Are the lines from {param1} to {param2} and from {param3} to {param4} perpendicular?",
+        "num_params": 4
+    }
+}

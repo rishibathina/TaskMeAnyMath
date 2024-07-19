@@ -1,0 +1,14 @@
+{
+    "template1": {
+        "text": "Calculate the volume of a rectangular prism with length {0} units, width {1} units, and height {2} units.",
+        "num_params": 3
+    },
+    "template2": {
+        "text": "What is the volume of a rectangular prism with dimensions {0}x{1}x{2} units?",
+        "num_params": 3
+    },
+    "template3": {
+        "text": "Find the volume of a rectangular prism given its length is {0} units, width is {1} units, and height is {2} units.",
+        "num_params": 3
+    }
+}

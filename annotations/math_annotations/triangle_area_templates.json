@@ -1,0 +1,14 @@
+{
+    "template1": {
+        "text": "Calculate the area of a triangle with a base of {0} units and a height of {1} units.",
+        "num_params": 2
+    },
+    "template2": {
+        "text": "Find the area of a triangle given that its base is {0} units and its height is {1} units.",
+        "num_params": 2
+    },
+    "template3": {
+        "text": "What is the area of a triangle with a base of {0} units and a height of {1} units?",
+        "num_params": 2
+    }
+}
