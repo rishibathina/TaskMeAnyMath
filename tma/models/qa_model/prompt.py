@@ -1,3 +1,18 @@
+def math_prompt(question, choices=[]):
+	if len(choices) == 0:
+		prompt = question + "\nPut your final answer in \{\}."
+	else:
+		choices = '\n'.join(choices)
+		prompt = (f"{question}\n"
+					f"Select from the following choices.\n"
+					f"{choices}\n"
+     				"Put your final answer in \{\}")
+	return prompt
+
+####################################################################################################
+# mathqa
+####################################################################################################
+
 def succinct_prompt(question, choices=[]):
 	if len(choices) == 0:
 		prompt = question

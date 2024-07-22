@@ -867,6 +867,7 @@ class QATaskEvaluator(TaskEvaluator):
 				task = None if self.overwrite_task_cache else cache.get(key_str, None)
 				if task is None:
 					task = self.task_generator.generate(task_plan, return_data=True)
+					print(task)
 					task['options_trials'] = [list(self.rng.permutation(task['options'])) for _ in range(self.n_trials_per_instance)]
 				cache.set(key_str, task)
 

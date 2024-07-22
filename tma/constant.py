@@ -1,5 +1,8 @@
 NUM_OPTIONS = 4
 
+# TextQA
+MAX_OUTPUT_LEN = 100
+
 # ImageQA
 
 IMAGE_H = 512

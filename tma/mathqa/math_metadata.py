@@ -3,7 +3,7 @@ import sys
 
 import json
 import numpy
-from metadataMath1 import MetaData
+from ..base import MetaData
 
 def handle_templates(template_path):
         # iterate through json file and seperate into different number of params
@@ -14,6 +14,7 @@ def handle_templates(template_path):
 
         # Iterate over each template
         for template_name, template_info in templates_data.items():
+            print(template_name)
             num_params = template_info["num_params"]
             template_text = template_info["text"]
 

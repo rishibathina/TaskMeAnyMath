@@ -1,6 +1,6 @@
 {
     "template1": {
-        "text": "What is the perimeter of an iscoceles triangle of side length {param1} and hypotenuse {param2}?",
+        "text": "What is the perimeter of an isoceles triangle of side length {param1} and hypotenuse {param2}?",
         "num_params": 2
     },
     "template2": {
@@ -16,7 +16,7 @@
         "num_params": 3
     },
     "template5": {
-        "text": "If we have an iscoceles triangle with side length {param1} and hypotenuse {param2}. What is its perimeter?",
+        "text": "If we have an isoceles triangle with side length {param1} and hypotenuse {param2}. What is its perimeter?",
         "num_params": 2
     },
     "template6": {
