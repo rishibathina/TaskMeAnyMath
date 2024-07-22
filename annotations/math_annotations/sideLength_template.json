@@ -1,0 +1,6 @@
+{
+    "template1": {
+        "text": "What is the side length of a square with an area of {area} square units?",
+        "num_params": 1
+    }
+}

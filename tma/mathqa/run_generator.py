@@ -1,5 +1,5 @@
 import random
-from geometry_task import MathTemplateMetaData, PerimeterGenerator, MidpointGenerator, IntersectionGenerator, CircleGenerator, AngleGenerator, TaskStore
+from geometry_task import MathTemplateMetaData, PerimeterGenerator, MidpointGenerator, IntersectionGenerator, CircleGenerator, AngleGenerator, PerpendicularGenerator, SideLengthGenerator, ArcLengthGenerator,TaskStore
 
 def main():
 
