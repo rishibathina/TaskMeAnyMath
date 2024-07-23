@@ -2,9 +2,9 @@ from typing import Dict
 
 import numpy as np
 
-from .constant import NUM_OPTIONS
-from .metadata import MetaData
-from .task_store import TaskStore
+from constant import NUM_OPTIONS
+from metadata import MetaData
+from task_store import TaskStore
 
 
 class TaskGenerator:

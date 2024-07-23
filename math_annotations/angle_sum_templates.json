@@ -1,0 +1,14 @@
+{
+    "template1": {
+        "text": "What is the sum of the internal angles of a {0}?",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "Calculate the sum of all interior angles in a {0}.",
+        "num_params": 1
+    },
+    "template3": {
+        "text": "Determine the total measure of the internal angles of a {0}.",
+        "num_params": 1
+    }
+}

@@ -10,7 +10,7 @@ import diskcache
 import numpy as np
 from tqdm import tqdm, trange
 
-from .models import Model
+from . import Model
 from .models.qa_model import QAModel
 from .task_store import get_pd_schema
 
@@ -812,7 +812,6 @@ class TaskEvaluator:
 
 		return results, selection, function_approximator
 
-
 class QATaskEvaluator(TaskEvaluator):
 	data_field = None
 
@@ -930,10 +929,119 @@ class QATaskEvaluator(TaskEvaluator):
 		res = apply_aggregate_function(acc, aggregate_func)
 		return res
 
+class MCQATaskEvaluator(TaskEvaluator):
+	data_field = None
 
-class VQATaskEvaluator(QATaskEvaluator):
-	data_field = 'image'
+	def __init__(
+			self,
+			task_plan_df,
+			task_generator,
+			embedding_func: Callable = None,
+			embedding_name: str = 'st',
+			embedding_batch_size: int = 10000,
+			n_instance_per_task: int = 5,
+			n_trials_per_instance: int = 3,
+			cache_path_root: str = None,
+			cache_size_limit: int = 10,  # in GB
+			overwrite_embedding_cache: bool = False,
+			overwrite_eval_cache: bool = False,
+			overwrite_task_cache: bool = False,
+			seed: int = 42,
+	):
+		super().__init__(
+			task_plan_df,
+			task_generator,
+			embedding_func,
+			embedding_name,
+			embedding_batch_size,
+			cache_path_root,
+			cache_size_limit,
+			overwrite_embedding_cache,
+			overwrite_eval_cache,
+			overwrite_task_cache,
+			seed,
+		)
+		self.n_instance_per_task = n_instance_per_task
+		self.n_trials_per_instance = n_trials_per_instance
 
+	def _embedding(self, pool):
+		docs = []
+		for plan in pool:
+			task = self.task_generator.generate(plan, return_data=False)
+			docs.append(f'question: {task["question"]}\nanswer: {task["answer"]}\n{task["task_plan"]}')
+		return self.embedding_func(docs)
 
-class VideoQATaskEvaluator(QATaskEvaluator):
-	data_field = 'video'
+	def _generate_task(self, task_plan, i):
+		if self.task_cache_path is None:
+			task = self.task_generator.generate(task_plan, return_data=True)
+			task['options_trials'] = [list(self.rng.permutation(task['options'])) for _ in range(self.n_trials_per_instance)]
+		else:
+			with diskcache.Cache(self.task_cache_path, size_limit=self.cache_size_limit) as cache:
+				key = task_plan.copy()
+				key['instance_id'] = i
+				key_str = json.dumps(key, sort_keys=True)
+				task = None if self.overwrite_task_cache else cache.get(key_str, None)
+				if task is None:
+					task = self.task_generator.generate(task_plan, return_data=True)
+					print(task)
+					task['options_trials'] = [list(self.rng.permutation(task['options'])) for _ in range(self.n_trials_per_instance)]
+				cache.set(key_str, task)
+
+		return task
+
+	def get_tasks(self, indices):
+		tasks = {}
+		for plan_id in indices:
+			plan_id = int(plan_id)
+			task_plan = self._plan_id_to_dict(plan_id)
+			tasks[plan_id] = {}
+			for i in range(self.n_instance_per_task):
+				tasks[plan_id][i] = self._generate_task(task_plan, i)
+
+		return tasks
+
+	def _evaluate_task_plan(self, task_plan, model: QAModel):
+		acc = []
+		for i in range(self.n_instance_per_task):
+			task = self._generate_task(task_plan, i)
+			for ii in range(self.n_trials_per_instance):
+				res = model.multiple_choice_qa(task[self.data_field], task['question'], task['options_trials'][ii], task['answer'])
+				acc.append(res['accuracy'])
+
+		acc = np.mean(acc)
+		return acc
+
+	def _evaluate_one(self, plan_id, model: Union[QAModel, List[QAModel]], aggregate_func: Union[str, Callable] = None):
+		plan_id = int(plan_id)
+		task_plan = self._plan_id_to_dict(plan_id)
+
+		if self.eval_cache_path is None:
+			if isinstance(model, list):
+				acc = [self._evaluate_task_plan(task_plan, m) for m in model]
+			else:
+				acc = self._evaluate_task_plan(task_plan, model)
+		else:
+			with diskcache.Cache(self.eval_cache_path, size_limit=self.cache_size_limit) as cache:
+				key = task_plan.copy()
+				key['n_trials_per_instance'] = self.n_trials_per_instance
+				key['n_instance_per_task'] = self.n_instance_per_task
+
+				if isinstance(model, list):
+					acc = []
+					for m in model:
+						key['model'] = m.model_name
+						key_str = json.dumps(key, sort_keys=True)
+						acc_m = None if self.overwrite_eval_cache else cache.get(key_str, None)
+						if acc_m is None:
+							acc_m = self._evaluate_task_plan(task_plan, m)
+							cache.set(key_str, acc_m)
+						acc.append(acc_m)
+				else:
+					key['model'] = model.model_name
+					key_str = json.dumps(key, sort_keys=True)
+					acc = None if self.overwrite_eval_cache else cache.get(key_str, None)
+					if acc is None:
+						acc = self._evaluate_task_plan(task_plan, model)
+						cache.set(key_str, acc)
+		res = apply_aggregate_function(acc, aggregate_func)
+		return res

@@ -1,0 +1,6 @@
+{
+    "template1": {
+        "text": "What is the arc length of a circle with radius {radius} units and angle {angle} degrees?",
+        "num_params": 2
+    }
+}

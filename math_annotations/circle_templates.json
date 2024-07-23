@@ -1,0 +1,10 @@
+{
+    "template1": {
+        "text": "What is the perimeter (circumference) of a circle with radius {param1}?",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "What is the area of a circle with radius {param1}?",
+        "num_params": 1
+    }
+}
