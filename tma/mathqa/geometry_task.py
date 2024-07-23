@@ -53,13 +53,13 @@ class GeoPlanGenerator(TaskGenerator):
 class PerimeterGenerator(GeoPlanGenerator):
     schema = {
         'question_template' : 'str',
-        'side_one'          : 'float',
-        'side_two'          : 'float',
-        'side_three'        : 'float'
+        'side_one'          : 'str',
+        'side_two'          : 'str',
+        'side_three'        : 'str'
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, side_one_range=PERI_SIDE_ONE_RANGE, side_two_range=PERI_SIDE_TWO_RANGE, side_three_range=PERI_SIDE_THREE_RANGE, num_splices=100):
-        super.__init__(metadata, seed=seed)
+    def __init__(self, metadata: MathTemplateMetaData, seed=42, side_one_range=PERI_SIDE_ONE_RANGE, side_two_range=PERI_SIDE_TWO_RANGE, side_three_range=PERI_SIDE_THREE_RANGE, num_splices=3):
+        super().__init__(metadata, seed=seed)
         self.side_one_range = side_one_range
         self.side_two_range = side_two_range
         self.side_three_range = side_three_range
@@ -78,8 +78,10 @@ class PerimeterGenerator(GeoPlanGenerator):
             
             for template in tqdm(templates, desc=f"Enumerating templates with {param_count} params"):
                 for group in peri_list:
-                    params = [param if param is not None else None for param in group]
-                    while len(params) < 3:
+                    if isinstance(group, (float, np.float64)):  # Check if group is a float
+                        group = [group]
+                    params = [str(param) if param is not None else None for param in group]                   
+                    while len(params) < 3:  
                         params.append(None)
 
                     task_plan = {
@@ -97,23 +99,22 @@ class PerimeterGenerator(GeoPlanGenerator):
         answer = None
 
         template = task_plan['question_template']
-        side_one = task_plan['side_one']
-        side_two = task_plan['side_two']
-        side_three = task_plan['side_three']
+        side_one = float(task_plan['side_one'])
+        side_two = float(task_plan['side_two']) if task_plan['side_two'] is not None else None
+        side_three = float(task_plan['side_three']) if task_plan['side_three'] is not None else None
 
         if side_two is None:
-            question = template.format(side_one) # format is single param
-            answer = 3 * side_one
+            question = template.format(side_one = side_one) # format is single param
+            answer = str(3 * side_one)
             
         elif side_three is None:
-            question = template.format(side_one, side_two) # format is double param
-            answer = 2 * side_one + side_two
+            question = template.format(side_one=side_one, side_two=side_two) # format is double param
+            answer = str(2 * side_one + side_two)
         
         else:
-            question = template.format(side_one, side_two, side_three) # format is triple param
-            answer = side_one + side_two + side_three
+            question = template.format(side_one=side_one, side_two=side_two, side_three=side_three) # format is triple param
+            answer = str(side_one + side_two + side_three)
             
-
         return question, answer, self.metadata
 
     
@@ -359,7 +360,7 @@ class SideLengthGenerator(GeoPlanGenerator):
         return question, answer, self.metadata
 
 
-class CircleGenerator(GeoPlanGenerator):
+
     schema = {
         'question_template': 'str',
         'radius': 'str',          # Store float as string
@@ -367,9 +368,8 @@ class CircleGenerator(GeoPlanGenerator):
         'area': 'str'
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, radius_range=(1, 100), num_tasks=100):
+    def __init__(self, metadata: MathTemplateMetaData, seed=42, num_tasks=100):
         super().__init__(metadata, seed=seed)
-        self.radius_range = radius_range
         self.num_tasks = num_tasks
         self.all_tasks = set()
 
@@ -377,14 +377,24 @@ class CircleGenerator(GeoPlanGenerator):
         return json.dumps(task_plan)
 
     def enumerate_task_plans(self, task_store: TaskStore):
-        # This method generates all possible tasks in this range
-        all_radius = np.linspace(self.radius_range[0], self.radius_range[1], self.num_tasks)
+        all_values = np.linspace(1, 100, self.num_tasks)  # general range for any circle property
         template_breakdown = self.metadata.templates_by_num_params
-        for num_paras, texts in template_breakdown.items():
+        for num_params, texts in template_breakdown.items():
             for text in texts:
-                for radius in tqdm(all_radius, desc=f"Enumerating templates with {num_paras} params"):
-                    circumference = 2 * np.pi * radius
-                    area = np.pi * radius**2
+                for value in tqdm(all_values, desc=f"Enumerating templates with {num_params} params"):
+                    if 'circumference' in text or 'perimeter' in text:
+                        radius = value / (2 * np.pi)
+                        circumference = value
+                        area = np.pi * radius ** 2
+                    elif 'area' in text:
+                        radius = np.sqrt(value / np.pi)
+                        circumference = 2 * np.pi * radius
+                        area = value
+                    else:  # default to radius if not specified
+                        radius = value
+                        circumference = 2 * np.pi * radius
+                        area = np.pi * radius ** 2
+                    
                     result = (radius, circumference, area)
                     if result not in self.all_tasks:
                         task_plan = {
@@ -397,13 +407,13 @@ class CircleGenerator(GeoPlanGenerator):
                         self.all_tasks.add(result)
 
     def _generate_task(self, task_plan) -> Tuple[str, str, Dict]:
-        # Generate one task at a time
         answer = None
         question = None
         template = task_plan['question_template']
         radius = float(task_plan['radius'])
         circumference = float(task_plan['circumference'])
         area = float(task_plan['area'])
+        
         if 'circumference' in template or 'perimeter' in template:
             if 'radius' in template:
                 question = template.format(param1=radius)
@@ -420,65 +430,60 @@ class CircleGenerator(GeoPlanGenerator):
                 answer = radius
         else:
             raise ValueError("Template must specify either perimeter, area, or radius.")
+
         return question, str(answer), self.metadata
 
 
-class AngleGenerator(GeoPlanGenerator):
     schema = {
         'question_template': 'str',
-        'angles': 'list'  # Store list of angles
+        'length': 'str',
+        'width': 'str',
+        'height': 'str'
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, num_tasks=100):
+    def __init__(self, metadata, seed=42, length_range=(1, 10), width_range=(1, 10), height_range=(1, 10), num_tasks=100):
         super().__init__(metadata, seed=seed)
         self.num_tasks = num_tasks
         self.all_tasks = set()
-    
-    def _task_plan_to_str(self, task_plan) -> str:
+        self.length_range = length_range
+        self.width_range = width_range
+        self.height_range = height_range
+        self.seed = seed
+
+    def _task_plan_to_str(self, task_plan):
         return json.dumps(task_plan)
-    
-    def enumerate_task_plans(self, task_store: TaskStore):
-        # store tasks in the task store
-        template_breakdown = self.metadata.templates_by_num_params
-        shapes = {
-            'triangle': [60, 60, 60],
-            'rectangle': [90, 90, 90, 90],
-            'pentagon': [108, 108, 108, 108, 108],
-            'hexagon': [120, 120, 120, 120, 120, 120]
-        }
-        for num_params, templates in template_breakdown.items():
-            for template_text in templates:
-                for shape, angles in shapes.items():
-                    if len(angles) == num_params:
-                        task_plan = {
+
+    def enumerate_task_plans(self, task_store):
+        np.random.seed(self.seed)
+        lengths = np.random.uniform(self.length_range[0], self.length_range[1], self.num_tasks)
+        widths = np.random.uniform(self.width_range[0], self.width_range[1], self.num_tasks)
+        heights = np.random.uniform(self.height_range[0], self.height_range[1], self.num_tasks)
+        templates_by_num_params = self.metadata.templates_by_num_params
+        for num_params, templates in templates_by_num_params.items():
+            for template_text in tqdm(templates, desc=f"Enumerating templates with {num_params} params"):
+                for length in lengths:
+                    for width in widths:
+                        for height in heights:
+                            task_plan = {
                             'question_template': template_text,
-                            'angles': angles
-                        }
-                        task_store.add(task_plan)
-                        self.all_tasks.add(tuple(angles))
-        
-    def _generate_task(self, task_plan) -> Tuple[str, str, Dict]:
-        # generate the single task
-        question = None
-        answer = None
-
+                            'length': length,
+                            'width': width,
+                            'height': height
+                            }
+                            task_store.add(task_plan)
+    
+    def _generate_task(self, task_plan):
         template = task_plan['question_template']
-        angles = task_plan['angles']
-
-        if len(angles) == 3:
-            answer = "triangle"
-        elif len(angles) == 4:
-            answer = "rectangle"
-        elif len(angles) == 5:
-            answer = "pentagon"
-        elif len(angles) == 6:
-            answer = "hexagon"
-        else:
-            raise ValueError("Unsupported shape")
-
-        question = template.format(*angles)
+        height = float(task_plan['height'])
+        width = float(task_plan['width'])
+        length = float(task_plan['length'])
+        problem = (height, width, length)
+        self.all_tasks.add(problem)
+        volume = length * width * height
+        question = template.format(length, width, height)
+        answer = str(volume)
         return question, answer, self.metadata
-
+        
 
 class ArcLengthGenerator(GeoPlanGenerator):
     RADIUS_RANGE = (1, 10) 
@@ -527,7 +532,6 @@ class ArcLengthGenerator(GeoPlanGenerator):
         return question, answer, self.metadata
 
 
-class AngleGenerator(GeoPlanGenerator):
     schema = {
         'question_template': 'str',
         'angles': 'list'  # Store list of angles
@@ -551,7 +555,7 @@ class AngleGenerator(GeoPlanGenerator):
             'hexagon': [120, 120, 120, 120, 120, 120]
         }
         for num_params, templates in template_breakdown.items():
-            for template_text in templates:
+            for template_text in tqdm(templates, desc=f"Enumerating templates with {num_params} params"):
                 for shape, angles in shapes.items():
                     if len(angles) == num_params:
                         task_plan = {
@@ -582,6 +586,232 @@ class AngleGenerator(GeoPlanGenerator):
 
         question = template.format(*angles)
         return question, answer, self.metadata
+    
+
+    schema = {
+        'question_template': 'str',
+        'base': 'str',
+        'height': 'str'
+    }
+    
+    def __init__(self, metadata: MathTemplateMetaData, seed=42, base_range=(1, 100), height_range=(1, 100), num_tasks=100):
+        super().__init__(metadata, seed=seed)
+        self.num_tasks = num_tasks
+        self.all_tasks = set()
+        self.base_range = base_range
+        self.height_range = height_range
+    
+    
+    def _task_plan_to_str(self, task_plan) -> str:
+        return json.dumps(task_plan)
+    
+    def enumerate_task_plans(self, task_store: TaskStore):
+        # this method should put all possible tasks to the taskstore
+        template_breakdown = self.metadata.templates_by_num_params
+        all_bases = np.linspace(self.base_range[0], self.base_range[1], self.num_tasks)
+        all_heights = np.linspace(self.height_range[0], self.height_range[1], self.num_tasks)
+        for num_params, templates in template_breakdown.items():
+            for template_text in tqdm(templates, desc=f"Enumerating templates with {num_params} params"):
+                for base in all_bases:
+                    for height in all_heights:
+                        task_plan = {
+                                'question_template': template_text,
+                                'base': str(base),
+                                'height': str(height)
+                            }
+                        task_store.add(task_plan)
+                        self.all_tasks.add((base, height))
+        
+    def _generate_task(self, task_plan) -> Tuple[str, str, Dict]:
+        # generates single task
+        question = task_plan['question_template']
+        base = task_plan['base']
+        height = task_plan["height"]
+        area = 0.5 * float(base) * float(height)
+        question_text = question.format(base, height)
+        area = str(area)
+        return question_text, area, self.metadata
+
+
+    schema = {
+        'question_template': 'str',
+        'shape': 'str',
+        'sides': 'int'
+    }
+    
+    def __init__(self, metadata, seed=42):
+        super().__init__(metadata, seed=seed)
+        self.all_tasks = set()
+        # store possible shapes
+        self.shapes = {
+            'triangle': 3,
+            'quadrilateral': 4,
+            'pentagon': 5,
+            'hexagon': 6,
+            'heptagon': 7,
+            'octagon': 8
+        }
+        
+         
+    def _task_plan_to_str(self, task_plan):
+        # rgus method converts taskplan into str
+        return json.dumps(task_plan)
+    
+    def enumerate_task_plans(self, task_store):
+        # put all the tasks into the task store
+        templates_by_num_params = self.metadata.templates_by_num_params
+        for num_params, templates in templates_by_num_params.items():
+            for template_text in tqdm(templates, desc=f"Enumerating templates with {num_params} params"):
+                for shape, sides in self.shapes.items():
+                    task_plan = {
+                            'question_template': template_text,
+                            'shape': shape,
+                            'sides': sides
+                        }
+                    task_store.add(task_plan)
+        
+    def _generate_task(self, task_plan):
+        # calculate the angle sum of the problem
+        # generate one task
+        # remember to avoid regenerating same problem here
+        template = task_plan['question_template']
+        shape = task_plan['shape']
+        side = task_plan['sides']
+        problem = (shape, side)
+        self.all_tasks.add(problem)
+        angle_sum = (side - 2) * 180
+        question = template.format(shape)
+        answer = str(angle_sum)
+        return question, answer, self.metadata
+
+
+    schema = {
+        'question_template': 'str',
+        'length': 'str',
+        'width': 'str',
+        'height': 'str'
+    }
+
+    def __init__(self, metadata, seed=42, length_range=(1, 10), width_range=(1, 10), height_range=(1, 10), num_tasks=100):
+        super().__init__(metadata, seed=seed)
+        self.num_tasks = num_tasks
+        self.all_tasks = set()
+        self.length_range = length_range
+        self.width_range = width_range
+        self.height_range = height_range
+        self.seed = seed
+
+    def _task_plan_to_str(self, task_plan):
+        return json.dumps(task_plan)
+
+    def enumerate_task_plans(self, task_store):
+        np.random.seed(self.seed)
+        lengths = np.random.uniform(self.length_range[0], self.length_range[1], self.num_tasks)
+        widths = np.random.uniform(self.width_range[0], self.width_range[1], self.num_tasks)
+        heights = np.random.uniform(self.height_range[0], self.height_range[1], self.num_tasks)
+        templates_by_num_params = self.metadata.templates_by_num_params
+        for num_params, templates in templates_by_num_params.items():
+            for template_text in tqdm(templates, desc=f"Enumerating templates with {num_params} params"):
+                for length in lengths:
+                    for width in widths:
+                        for height in heights:
+                            task_plan = {
+                            'question_template': template_text,
+                            'length': length,
+                            'width': width,
+                            'height': height
+                            }
+                            task_store.add(task_plan)
+    
+    def _generate_task(self, task_plan):
+        template = task_plan['question_template']
+        height = float(task_plan['height'])
+        width = float(task_plan['width'])
+        length = float(task_plan['length'])
+        problem = (height, width, length)
+        if problem not in self.all_tasks:
+            self.all_tasks.add(problem)
+            volume = length * width * height
+            question = template.format(length, width, height)
+            answer = str(volume)
+            return question, answer, self.metadata
+        else:
+            print("This problem is generated already, please try again")
+            return VolumeRectangularPrismGenerator._generate_task(self, task_plan)
+
+
+class CircleGenerator(GeoPlanGenerator):
+    schema = {
+        'question_template': 'str',
+        'radius': 'str',          # Store float as string
+        'circumference': 'str',   # Store float as string
+        'area': 'str'
+    }
+
+    def __init__(self, metadata: MathTemplateMetaData, seed=42, num_tasks=100):
+        super().__init__(metadata, seed=seed)
+        self.num_tasks = num_tasks
+        self.all_tasks = set()
+
+    def _task_plan_to_str(self, task_plan) -> str:
+        return json.dumps(task_plan)
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        all_values = np.linspace(1, 100, self.num_tasks)  # general range for any circle property
+        template_breakdown = self.metadata.templates_by_num_params
+        for num_params, texts in template_breakdown.items():
+            for text in texts:
+                for value in tqdm(all_values, desc=f"Enumerating templates with {num_params} params"):
+                    if 'circumference' in text or 'perimeter' in text:
+                        radius = value / (2 * np.pi)
+                        circumference = value
+                        area = np.pi * radius ** 2
+                    elif 'area' in text:
+                        radius = np.sqrt(value / np.pi)
+                        circumference = 2 * np.pi * radius
+                        area = value
+                    else:  # default to radius if not specified
+                        radius = value
+                        circumference = 2 * np.pi * radius
+                        area = np.pi * radius ** 2
+                    
+                    result = (radius, circumference, area)
+                    if result not in self.all_tasks:
+                        task_plan = {
+                            'question_template': text,
+                            'radius': str(radius),
+                            'circumference': str(circumference),
+                            'area': str(area)
+                        }
+                        task_store.add(task_plan)
+                        self.all_tasks.add(result)
+
+    def _generate_task(self, task_plan) -> Tuple[str, str, Dict]:
+        answer = None
+        question = None
+        template = task_plan['question_template']
+        radius = float(task_plan['radius'])
+        circumference = float(task_plan['circumference'])
+        area = float(task_plan['area'])
+        
+        if 'circumference' in template or 'perimeter' in template:
+            if 'radius' in template:
+                question = template.format(param1=radius)
+                answer = circumference
+            else:
+                question = template.format(param1=circumference)
+                answer = radius
+        elif 'area' in template:
+            if 'radius' in template:
+                question = template.format(param1=radius)
+                answer = area
+            else:
+                question = template.format(param1=area)
+                answer = radius
+        else:
+            raise ValueError("Template must specify either perimeter, area, or radius.")
+
+        return question, str(answer), self.metadata
     
 
 class TriangleAreaGenerator(GeoPlanGenerator):
@@ -676,15 +906,11 @@ class AngleSumGenerator(GeoPlanGenerator):
         shape = task_plan['shape']
         side = task_plan['sides']
         problem = (shape, side)
-        if problem not in self.all_tasks:
-            self.all_tasks.add(problem)
-            angle_sum = (side - 2) * 180
-            question = template.format(shape)
-            answer = str(angle_sum)
-            return question, answer, self.metadata
-        else:
-            print("This problem is generated already, please try again")
-            return AngleSumGenerator._generate_task(self, task_plan)
+        self.all_tasks.add(problem)
+        angle_sum = (side - 2) * 180
+        question = template.format(shape)
+        answer = str(angle_sum)
+        return question, answer, self.metadata
 
 
 class VolumeRectangularPrismGenerator(GeoPlanGenerator):
@@ -732,13 +958,65 @@ class VolumeRectangularPrismGenerator(GeoPlanGenerator):
         width = float(task_plan['width'])
         length = float(task_plan['length'])
         problem = (height, width, length)
-        if problem not in self.all_tasks:
-            self.all_tasks.add(problem)
-            volume = length * width * height
-            question = template.format(length, width, height)
-            answer = str(volume)
-            return question, answer, self.metadata
-        else:
-            print("This problem is generated already, please try again")
-            return VolumeRectangularPrismGenerator._generate_task(self, task_plan)
+        self.all_tasks.add(problem)
+        volume = length * width * height
+        question = template.format(length, width, height)
+        answer = str(volume)
+        return question, answer, self.metadata
         
+
+class AngleGenerator(GeoPlanGenerator):
+    schema = {
+        'question_template': 'str',
+        'angles': 'list'  # Store list of angles
+    }
+
+    def __init__(self, metadata: MathTemplateMetaData, seed=42, num_tasks=100):
+        super().__init__(metadata, seed=seed)
+        self.num_tasks = num_tasks
+        self.all_tasks = set()
+    
+    def _task_plan_to_str(self, task_plan) -> str:
+        return json.dumps(task_plan)
+    
+    def enumerate_task_plans(self, task_store: TaskStore):
+        # store tasks in the task store
+        template_breakdown = self.metadata.templates_by_num_params
+        shapes = {
+            'triangle': [60, 60, 60],
+            'rectangle': [90, 90, 90, 90],
+            'pentagon': [108, 108, 108, 108, 108],
+            'hexagon': [120, 120, 120, 120, 120, 120]
+        }
+        for num_params, templates in template_breakdown.items():
+            for template_text in tqdm(templates, desc=f"Enumerating templates with {num_params} params"):
+                for shape, angles in shapes.items():
+                    if len(angles) == num_params:
+                        task_plan = {
+                            'question_template': template_text,
+                            'angles': angles
+                        }
+                        task_store.add(task_plan)
+                        self.all_tasks.add(tuple(angles))
+        
+    def _generate_task(self, task_plan) -> Tuple[str, str, Dict]:
+        # generate the single task
+        question = None
+        answer = None
+
+        template = task_plan['question_template']
+        angles = task_plan['angles']
+
+        if len(angles) == 3:
+            answer = "triangle"
+        elif len(angles) == 4:
+            answer = "rectangle"
+        elif len(angles) == 5:
+            answer = "pentagon"
+        elif len(angles) == 6:
+            answer = "hexagon"
+        else:
+            raise ValueError("Unsupported shape")
+
+        question = template.format(*angles)
+        return question, answer, self.metadata
