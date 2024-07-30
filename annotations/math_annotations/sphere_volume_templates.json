@@ -1,0 +1,22 @@
+{
+    "template1": {
+        "text": "What is the volume of a sphere with a radius of {0} cm?",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "Calculate the volume of a sphere whose radius is {0} cm.",
+        "num_params": 1
+    },
+    "template3": {
+        "text": "A sphere has a radius of {0} cm. Determine its volume.",
+        "num_params": 1
+    },
+    "template4": {
+        "text": "If a sphere's radius is {0} cm, what is its volume in cubic centimeters?",
+        "num_params": 1
+    },
+    "template5": {
+        "text": "Find the volume of a sphere given that its radius measures {0} cm.",
+        "num_params": 1
+    }
+}

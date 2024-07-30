@@ -10,5 +10,25 @@
     "template3": {
         "text": "Determine the total measure of the internal angles of a {0}.",
         "num_params": 1
+    },
+    "template4": {
+        "text": "How many degrees are there in the sum of all angles inside a {0}?",
+        "num_params": 1
+    },
+    "template5": {
+        "text": "Find the total angle sum of a {0}.",
+        "num_params": 1
+    },
+    "template6": {
+        "text": "What is the combined measure of all internal angles for a {0}?",
+        "num_params": 1
+    },
+    "template7": {
+        "text": "Compute the aggregate of all interior angles in a {0}.",
+        "num_params": 1
+    },
+    "template8": {
+        "text": "Give the total sum of the angles within a {0}.",
+        "num_params": 1
     }
 }
