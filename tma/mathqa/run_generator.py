@@ -1,5 +1,9 @@
 import random
-from geometry_task import MathTemplateMetaData, PerimeterGenerator, MidpointGenerator, IntersectionGenerator, PerimeterGenerator, AngleGenerator, PerpendicularGenerator, SideLengthGenerator, ArcLengthGenerator, CircleGenerator, TaskStore
+from geometry_task import (
+    MathTemplateMetaData, PerimeterGenerator, MidpointGenerator,IntersectionGenerator, 
+    PerimeterGenerator, AngleGenerator, PerpendicularGenerator, SideLengthGenerator,
+     ArcLengthGenerator, CircleGenerator, PointDistanceGenerator, PythagoreanTheoremGenerator, TaskStore
+)
 
 def main():
     # Define the path to templates using a raw string
@@ -12,24 +16,26 @@ def main():
     SideLength_template_path = r'C:\Users\jiata\OneDrive\Desktop\Raivn\TaskMeAnyMath\annotations\math_annotations\sideLength_template.json'
     ArcLength_template_path = r'C:\Users\jiata\OneDrive\Desktop\Raivn\TaskMeAnyMath\annotations\math_annotations\arcLength_template.json'
     Circle_template_path = r'C:\Users\jiata\OneDrive\Desktop\Raivn\TaskMeAnyMath\annotations\math_annotations\circle_templates.json'
+    PointDistance_template_path = r'C:\Users\jiata\OneDrive\Desktop\Raivn\TaskMeAnyMath\annotations\math_annotations\point_distance_template.json'
+    PythagoreanTheorem_template_path = r'C:\Users\jiata\OneDrive\Desktop\Raivn\TaskMeAnyMath\annotations\math_annotations\pythagoreanTheorem_template.json'
 
-    Perimeter_metadata = MathTemplateMetaData(template_path=Perimeter_template_path)
+    PythagoreanTheorem_metadata = MathTemplateMetaData(template_path=PythagoreanTheorem_template_path)
 
-    Perimeter_task_store = TaskStore(schema = PerimeterGenerator.schema)
+    PythagoreanTheorem_task_store = TaskStore(schema = PythagoreanTheoremGenerator.schema)
 
-    # metadata = MathTemplateMetaData(template_path=Perimeter_template_path)
-    metadata = MathTemplateMetaData(template_path=Perimeter_template_path)
+    # metadata = MathTemplateMetaData(template_path=PythagoreanTheorem_template_path)
+    metadata = MathTemplateMetaData(template_path=PythagoreanTheorem_template_path)
 
-    Perimeter_generator = PerimeterGenerator(metadata=Perimeter_metadata)
-    Perimeter_generator.enumerate_task_plans(Perimeter_task_store)
+    PythagoreanTheorem_generator = PythagoreanTheoremGenerator(metadata=PythagoreanTheorem_metadata)
+    PythagoreanTheorem_generator.enumerate_task_plans(PythagoreanTheorem_task_store)
  
     # Select and print a random task
-    Perimeter_tasks = list(Perimeter_task_store)
-    if Perimeter_tasks:
-        random_Perimeter_task = random.choice(Perimeter_tasks)
-        Perimeter_task = Perimeter_generator.generate(random_Perimeter_task)
-        print("Random Perimeter Task:")
-        print("Question:", Perimeter_task['question'])
-        print("Answer:", Perimeter_task['answer'])
+    PythagoreanTheorem_tasks = list(PythagoreanTheorem_task_store)
+    if PythagoreanTheorem_tasks:
+        random_PythagoreanTheorem_task = random.choice(PythagoreanTheorem_tasks)
+        PythagoreanTheorem_task = PythagoreanTheorem_generator.generate(random_PythagoreanTheorem_task)
+        print("Random PythagoreanTheorem Task:")
+        print("Question:", PythagoreanTheorem_task['question'])
+        print("Answer:", PythagoreanTheorem_task['answer'])
 if __name__ == "__main__":
     main()

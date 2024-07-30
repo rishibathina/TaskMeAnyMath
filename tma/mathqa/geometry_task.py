@@ -895,3 +895,96 @@ class AngleGenerator(GeoPlanGenerator):
 
         question = template.format(*angles)
         return question, answer, self.metadata
+
+
+class PointDistanceGenerator(GeoPlanGenerator):
+    X_COORDINATE_RANGE = (-10, 10)
+    Y_COORDINATE_RANGE = (-10, 10)
+
+    schema = {
+        'question_template': 'str',
+        'point1': 'str',
+        'point2': 'str'
+    }
+
+    def __init__(self, metadata: MathTemplateMetaData, seed=42, x_range=X_COORDINATE_RANGE, y_range=Y_COORDINATE_RANGE, num_splices=10):
+        super().__init__(metadata, seed=seed)
+        self.x_range = x_range
+        self.y_range = y_range
+        self.num_splices = num_splices
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        x_values = np.linspace(self.x_range[0], self.x_range[1], self.num_splices)
+        y_values = np.linspace(self.y_range[0], self.y_range[1], self.num_splices)
+
+        template_breakdown = self.metadata.templates_by_num_params
+
+        for param_count, templates in template_breakdown.items():
+            for template in tqdm(templates, desc="Enumerating templates for distance tasks"):
+                for x1 in x_values:
+                    for y1 in y_values:
+                        for x2 in x_values:
+                            for y2 in y_values:
+                                if (x1, y1) != (x2, y2):  # Ensure points are not identical
+                                    task_plan = {
+                                        'question_template': template,
+                                        'point1': str((x1, y1)),
+                                        'point2': str((x2, y2))
+                                    }
+                                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, str, List[str], Dict]:
+        template = task_plan['question_template']
+        point1 = eval(task_plan['point1'])
+        point2 = eval(task_plan['point2'])
+
+        distance = np.sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
+        
+        question = template.format(point1=point1, point2=point2)
+        answer = str(distance)
+        
+        return question, answer, self.metadata        
+
+
+class PythagoreanTheoremGenerator(GeoPlanGenerator):
+    LEG_RANGE = (1, 100)
+
+    schema = {
+        'question_template': 'str',
+        'leg1': 'str',
+        'leg2': 'str'
+    }
+
+    def __init__(self, metadata: MathTemplateMetaData, seed=42, leg_range=LEG_RANGE, num_splices=10):
+        super().__init__(metadata, seed=seed)
+        self.leg_range = leg_range
+        self.num_splices = num_splices
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        leg1_values = np.linspace(self.leg_range[0], self.leg_range[1], self.num_splices)
+        leg2_values = np.linspace(self.leg_range[0], self.leg_range[1], self.num_splices)
+
+        template_breakdown = self.metadata.templates_by_num_params
+
+        for param_count, templates in template_breakdown.items():
+            for template in tqdm(templates, desc="Enumerating templates for Pythagorean theorem tasks"):
+                for leg1 in leg1_values:
+                    for leg2 in leg2_values:
+                        task_plan = {
+                            'question_template': template,
+                            'leg1': str(leg1),
+                            'leg2': str(leg2)
+                        }
+                        task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, str, List[str], Dict]:
+        template = task_plan['question_template']
+        leg1 = float(task_plan['leg1'])
+        leg2 = float(task_plan['leg2'])
+
+        hypotenuse = np.sqrt(leg1**2 + leg2**2)
+        
+        question = template.format(leg1=leg1, leg2=leg2)
+        answer = str(hypotenuse)
+        
+        return question, answer, self.metadata
