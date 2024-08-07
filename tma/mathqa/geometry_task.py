@@ -58,13 +58,14 @@ class PerimeterGenerator(GeoPlanGenerator):
         'side_three'        : 'str'
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, side_one_range=PERI_SIDE_ONE_RANGE, side_two_range=PERI_SIDE_TWO_RANGE, side_three_range=PERI_SIDE_THREE_RANGE, num_splices=3):
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=False, seed=42, side_one_range=PERI_SIDE_ONE_RANGE, side_two_range=PERI_SIDE_TWO_RANGE, side_three_range=PERI_SIDE_THREE_RANGE, num_splices=3):
         super().__init__(metadata, seed=seed)
         self.side_one_range = side_one_range
         self.side_two_range = side_two_range
         self.side_three_range = side_three_range
         self.int_to_peri_list = int_to_peri_list
         self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
 
     def enumerate_task_plans(self, task_store: TaskStore):
         single = make_single_prod(self.side_one_range, self.num_splices)
@@ -103,19 +104,34 @@ class PerimeterGenerator(GeoPlanGenerator):
         side_two = float(task_plan['side_two']) if task_plan['side_two'] is not None else None
         side_three = float(task_plan['side_three']) if task_plan['side_three'] is not None else None
 
+        options = []
         if side_two is None:
             question = template.format(side_one = side_one) # format is single param
             answer = str(3 * side_one)
+            if self.multiple_choice:
+                options.append(2 * side_one)
+                options.append(side_one)
+                options.append(side_one * side_one / 2)
             
         elif side_three is None:
             question = template.format(side_one=side_one, side_two=side_two) # format is double param
             answer = str(2 * side_one + side_two)
+            if self.multiple_choice:
+                options.append(3 * side_one)
+                options.append(side_one + (2 * side_two))
+                options.append((side_one * side_two) / 2)
         
         else:
             question = template.format(side_one=side_one, side_two=side_two, side_three=side_three) # format is triple param
             answer = str(side_one + side_two + side_three)
+            if self.multiple_choice:
+                options.append(3 * side_one)
+                options.append(side_one + (2 * side_two))
+                options.append((side_one * side_two) / 2)
+        
+        
             
-        return question, answer, self.metadata
+        return question, options, answer, self.metadata
 
     
 class MidpointGenerator(GeoPlanGenerator):
