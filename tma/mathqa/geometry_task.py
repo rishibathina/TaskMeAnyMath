@@ -109,25 +109,25 @@ class PerimeterGenerator(GeoPlanGenerator):
             question = template.format(side_one = side_one) # format is single param
             answer = str(3 * side_one)
             if self.multiple_choice:
-                options[0] = 2 * side_one
-                options[1] = side_one
-                options[2] = (side_one * side_one) / 2
+                options.append(2 * side_one)
+                options.append(side_one)
+                options.append(side_one * side_one / 2)
             
         elif side_three is None:
             question = template.format(side_one=side_one, side_two=side_two) # format is double param
             answer = str(2 * side_one + side_two)
             if self.multiple_choice:
-                options[0] = 3 * side_one
-                options[1] = side_one + (2 * side_two)
-                options[2] = (side_one * side_two) / 2
+                options.append(3 * side_one)
+                options.append(side_one + (2 * side_two))
+                options.append((side_one * side_two) / 2)
         
         else:
             question = template.format(side_one=side_one, side_two=side_two, side_three=side_three) # format is triple param
             answer = str(side_one + side_two + side_three)
             if self.multiple_choice:
-                options[0] = 3 * side_one
-                options[1] = side_one + (2 * side_two)
-                options[2] = (side_one * side_two) / 2
+                options.append(3 * side_one)
+                options.append(side_one + (2 * side_two))
+                options.append((side_one * side_two) / 2)
         
         
             
