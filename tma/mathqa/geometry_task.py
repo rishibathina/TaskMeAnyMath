@@ -407,7 +407,6 @@ class ArcLengthGenerator(GeoPlanGenerator):
         return question, answer, self.metadata
 
 
-
 class CircleGenerator(GeoPlanGenerator):
     schema = {
         'question_template': 'str',
@@ -779,9 +778,6 @@ class ConeVolumeGenerator:
         question = template.format(radius, height)
         answer = f"{volume:.2f} cubic cm"
         return question, answer, self.metadata
-    
-
-
 
 
 class PointDistanceGenerator(GeoPlanGenerator):
