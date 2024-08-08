@@ -58,3 +58,49 @@ for i in range(0, 50):
     question, answer, _ = task
     print(question)
     print("Answer:", answer)
+    
+# run the triangle area class
+template_path = 'annotations/math_annotations/triangle_area_templates.json'
+metadata = MathTemplateMetaData(template_path=template_path)
+generator = TriangleAreaGenerator(metadata, multiple_choice = True)
+task_store = TaskStore(TriangleAreaGenerator.schema)
+generator.enumerate_task_plans(task_store)
+all_tasks = task_store.return_df().to_dict(orient='records')
+
+for i in range(0, 50):
+    random_task_plan = random.choice(all_tasks)
+    task = generator._generate_task(random_task_plan)
+    question, answer, options, _ = task
+    print(question)
+    print("Answer:", answer)
+    print("option1: "+ str(options[0]) + " and option2: " + str(options[1]) + " and option2: " + str(options[2]))
+    
+# run the VolumeRectangularPrismGenerator
+template_path = 'annotations/math_annotations/volume_rectangular_prism_templates.json'
+metadata = MathTemplateMetaData(template_path=template_path)
+generator = VolumeRectangularPrismGenerator(metadata, multi_options = True)
+task_store = TaskStore(VolumeRectangularPrismGenerator.schema)
+generator.enumerate_task_plans(task_store)
+all_tasks = task_store.return_df().to_dict(orient='records')
+
+for i in range(0, 50):
+    random_task_plan = random.choice(all_tasks)
+    task = generator._generate_task(random_task_plan)
+    question, answer, options, _ = task
+    print(question)
+    print("Answer:", answer)
+    print("option1: "+ str(options[0]) + " and option2: " + str(options[1]) + " and option2: " + str(options[2]))
+    
+# run angle generator
+template_path = 'annotations/math_annotations/angle_template.json'
+metadata = MathTemplateMetaData(template_path)
+generator = AngleGenerator(metadata)
+task_store = TaskStore(AngleGenerator.schema)
+generator.enumerate_task_plans(task_store)
+all_tasks = task_store.return_df().to_dict(orient='records')
+for i in range(0, 50):
+    random_task_plan = random.choice(all_tasks)
+    task = generator._generate_task(random_task_plan)
+    question, answer, _ = task
+    print(question)
+    print("Answer:", answer)
