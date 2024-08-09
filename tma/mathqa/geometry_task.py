@@ -37,10 +37,11 @@ class GeoPlanGenerator(TaskGenerator):
         if seed is not None:
             self.rng = np.random.default_rng(seed=seed)
 
-        question, answer, math_metadata = self._generate_task(task_plan)
+        question, options, answer, math_metadata = self._generate_task(task_plan)
 
         task = {
             'question'  : question.replace('_', ' '),
+            'options'   : options if self.multiple_choice else None,
             'answer'    : answer.replace('_', ' '),
             'task_plan' : self._task_plan_to_str(task_plan),
             'math_metadata' : math_metadata,
@@ -145,14 +146,13 @@ class MidpointGenerator(GeoPlanGenerator):
         'point2': 'str'
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, x_range=X_COORDINATE_RANGE, y_range=Y_COORDINATE_RANGE, z_range=Z_COORDINATE_RANGE, num_splices=5):
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, x_range=X_COORDINATE_RANGE, y_range=Y_COORDINATE_RANGE, z_range=Z_COORDINATE_RANGE, num_splices=5):
         super().__init__(metadata, seed=seed)
         self.x_range = x_range
         self.y_range = y_range
         self.z_range = z_range
         self.num_splices = num_splices
-
-
+        self.multiple_choice = multiple_choice
 
     def enumerate_task_plans(self, task_store: TaskStore):
         x_values = np.linspace(self.x_range[0], self.x_range[1], self.num_splices)
@@ -175,13 +175,13 @@ class MidpointGenerator(GeoPlanGenerator):
                                             'point2': (x2, y2, z2)
                                         }
                                         task_store.add(task_plan)
-                
-    def _generate_task(self, task_plan) -> Tuple[str, str, List[str], Dict]:
+
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
         template = task_plan['question_template']
         point1 = eval(task_plan['point1'])
         point2 = eval(task_plan['point2'])
 
-        midpoint = "({}, {}, {})".format(
+        midpoint = (
             (point1[0] + point2[0]) / 2,
             (point1[1] + point2[1]) / 2,
             (point1[2] + point2[2]) / 2
@@ -189,10 +189,26 @@ class MidpointGenerator(GeoPlanGenerator):
         
         question = template.format(
             param1 = point1,
-            param2 = point2)
-        answer = str(midpoint)
+            param2 = point2
+        )
+        correct_answer = "({}, {}, {})".format(midpoint[0], midpoint[1], midpoint[2])
         
-        return question, answer, self.metadata
+        options = []
+        if self.multiple_choice:
+            # Correct answer
+            options.append(correct_answer)
+            options.append("({}, {}, {})".format(
+                point1[0] + point2[0], point1[1] + point2[1], point1[2] + point2[2]  # Adding instead of averaging
+            ))
+            options.append("({}, {}, {})".format(
+                midpoint[0], (point1[1] + point2[1]) / 3, midpoint[2]  # Incorrect division
+            ))
+            options.append("({}, {}, {})".format(
+                (point1[0] + point2[0]) / 2, midpoint[2], midpoint[1]  # Swapping y and z in the midpoint calculation
+            ))
+            np.random.shuffle(options)
+        
+        return question, options, correct_answer, self.metadata
     
 
 class IntersectionGenerator(GeoPlanGenerator):
@@ -854,10 +870,11 @@ class PythagoreanTheoremGenerator(GeoPlanGenerator):
         'leg2': 'str'
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, leg_range=LEG_RANGE, num_splices=10):
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, leg_range=LEG_RANGE, num_splices=10):
         super().__init__(metadata, seed=seed)
         self.leg_range = leg_range
         self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
 
     def enumerate_task_plans(self, task_store: TaskStore):
         leg1_values = np.linspace(self.leg_range[0], self.leg_range[1], self.num_splices)
@@ -876,7 +893,7 @@ class PythagoreanTheoremGenerator(GeoPlanGenerator):
                         }
                         task_store.add(task_plan)
 
-    def _generate_task(self, task_plan) -> Tuple[str, str, List[str], Dict]:
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
         template = task_plan['question_template']
         leg1 = float(task_plan['leg1'])
         leg2 = float(task_plan['leg2'])
@@ -886,4 +903,12 @@ class PythagoreanTheoremGenerator(GeoPlanGenerator):
         question = template.format(leg1=leg1, leg2=leg2)
         answer = str(hypotenuse)
         
-        return question, answer, self.metadata
+        options = []
+        if self.multiple_choice:
+            options.append(str(hypotenuse))
+            options.append(str(leg1 + leg2))  # Adding the legs directly
+            options.append(str(np.sqrt(leg1 + leg2)))  # Failed to sqaure legs
+            options.append(str(np.sqrt((leg1 + leg2) / 2)))  # Average of the legs
+            #np.random.shuffle(options)
+        
+        return question, options, answer, self.metadata
