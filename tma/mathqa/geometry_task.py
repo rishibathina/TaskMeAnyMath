@@ -520,12 +520,13 @@ class TriangleAreaGenerator(GeoPlanGenerator):
         'height': 'str'
     }
     
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, base_range=(1, 100), height_range=(1, 100), num_tasks=100):
+    def __init__(self, metadata: MathTemplateMetaData, seed=42, base_range=(1, 100), height_range=(1, 100), num_tasks=100, multiple_choice=False):
         super().__init__(metadata, seed=seed)
         self.num_tasks = num_tasks
         self.all_tasks = set()
         self.base_range = base_range
         self.height_range = height_range
+        self.multiple_choice = multiple_choice
     
     
     def _task_plan_to_str(self, task_plan) -> str:
@@ -553,10 +554,22 @@ class TriangleAreaGenerator(GeoPlanGenerator):
         question = task_plan['question_template']
         base = task_plan['base']
         height = task_plan["height"]
+        options = []
         area = 0.5 * float(base) * float(height)
+        if (self.multiple_choice) :
+            # come up with three possible wrong answer
+            # 1: does not times 0.5
+            option1 = float(base) * float(height)
+            # 2: times 0.25 instead of 0.5
+            option2 = 0.25 * float(base) * float(height)
+            # 3: calculate base * base
+            option3 = float(base) * float(base)
+            options.append(option1)
+            options.append(option2)
+            options.append(option3)
         question_text = question.format(base, height)
         area = str(area)
-        return question_text, area, self.metadata
+        return question_text, area, options, self.metadata
 
 
 class AngleSumGenerator(GeoPlanGenerator):
@@ -622,7 +635,7 @@ class VolumeRectangularPrismGenerator(GeoPlanGenerator):
         'height': 'str'
     }
 
-    def __init__(self, metadata, seed=42, length_range=(1, 10), width_range=(1, 10), height_range=(1, 10), num_tasks=100):
+    def __init__(self, metadata, seed=42, length_range=(1, 10), width_range=(1, 10), height_range=(1, 10), num_tasks=100, multi_options = False):
         super().__init__(metadata, seed=seed)
         self.num_tasks = num_tasks
         self.all_tasks = set()
@@ -630,6 +643,8 @@ class VolumeRectangularPrismGenerator(GeoPlanGenerator):
         self.width_range = width_range
         self.height_range = height_range
         self.seed = seed
+        self.multi_options = multi_options
+        
 
     def _task_plan_to_str(self, task_plan):
         return json.dumps(task_plan)
@@ -660,10 +675,18 @@ class VolumeRectangularPrismGenerator(GeoPlanGenerator):
         length = float(task_plan['length'])
         problem = (height, width, length)
         self.all_tasks.add(problem)
+        options = []
         volume = length * width * height
+        if (self.multi_options):
+            option1 = length * width * 2
+            option2 = length * length * length
+            option3 = length + width + height
+            options.append(option1)
+            options.append(option2)
+            options.append(option3)
         question = template.format(length, width, height)
         answer = str(volume)
-        return question, answer, self.metadata
+        return question, answer, options, self.metadata
         
 
 class AngleGenerator(GeoPlanGenerator):
