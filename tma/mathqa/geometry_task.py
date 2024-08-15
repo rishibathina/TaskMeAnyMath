@@ -223,11 +223,12 @@ class IntersectionGenerator(GeoPlanGenerator):
         'vector2_end': 'str'
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, x_range=X_COORDINATE_RANGE, y_range=Y_COORDINATE_RANGE, num_splices=4):
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, x_range=X_COORDINATE_RANGE, y_range=Y_COORDINATE_RANGE, num_splices=4):
         super().__init__(metadata, seed=seed)
         self.x_range = x_range
         self.y_range = y_range
         self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
 
     def enumerate_task_plans(self, task_store: TaskStore):
         x_values = np.linspace(self.x_range[0], self.x_range[1], self.num_splices)
@@ -254,7 +255,7 @@ class IntersectionGenerator(GeoPlanGenerator):
                                                 }
                                                 task_store.add(task_plan)
 
-    def _generate_task(self, task_plan) -> Tuple[str, str, List[str], Dict]:
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
         template = task_plan['question_template']
         vector1_start = eval(task_plan['vector1_start'])
         vector1_end = eval(task_plan['vector1_end'])
@@ -266,6 +267,7 @@ class IntersectionGenerator(GeoPlanGenerator):
 
         if np.cross(vector1, vector2) == 0:
             answer = "null"
+            options = ["null"]
         else:
             # Compute intersection
             A = np.array([[vector1[0], -vector2[0]], [vector1[1], -vector2[1]]])
@@ -274,6 +276,19 @@ class IntersectionGenerator(GeoPlanGenerator):
             intersection = vector1_start + t[0] * vector1
             answer = str(tuple(intersection))
 
+            if self.multiple_choice:
+                options = [answer]
+                options.append(str(vector1_start))  
+                options.append(str(vector1_end))    
+                options.append(str(vector2_start))  
+                options.append(str(vector2_end))    
+
+                options = list(dict.fromkeys(options)) 
+                options = options[:4] 
+                np.random.shuffle(options)
+            else:
+                options = []
+
         question = template.format(
             param1=vector1_start,
             param2=vector1_end,
@@ -281,7 +296,8 @@ class IntersectionGenerator(GeoPlanGenerator):
             param4=vector2_end
         )
         
-        return question, answer, self.metadata
+        return question, options, answer, self.metadata
+
 
 
 class PerpendicularGenerator(GeoPlanGenerator):
@@ -361,10 +377,11 @@ class SideLengthGenerator(GeoPlanGenerator):
         'area': 'str'
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, area_range=AREA_RANGE, num_splices=5):
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, area_range=AREA_RANGE, num_splices=5):
         super().__init__(metadata, seed=seed)
         self.area_range = area_range
         self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
 
     def enumerate_task_plans(self, task_store: TaskStore):
         area_values = np.linspace(self.area_range[0], self.area_range[1], self.num_splices)
@@ -380,7 +397,7 @@ class SideLengthGenerator(GeoPlanGenerator):
                     }
                     task_store.add(task_plan)
 
-    def _generate_task(self, task_plan) -> Tuple[str, str, List[str], Dict]:
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
         template = task_plan['question_template']
         area = float(task_plan['area'])
 
@@ -388,8 +405,20 @@ class SideLengthGenerator(GeoPlanGenerator):
 
         question = template.format(area=area)
         answer = str(side_length)
+
+        options = []
+        if self.multiple_choice:
+            options.append(answer)
+            options.append(str(area / 2))  # Dividing area by 2
+            options.append(str(side_length * 2)) 
+            options.append(str(np.sqrt(area / 2))) #Using half the area
+
+            options = list(dict.fromkeys(options))
+            options = options[:4] 
+            np.random.shuffle(options)
         
-        return question, answer, self.metadata
+        return question, options, answer, self.metadata
+
         
 
 class ArcLengthGenerator(GeoPlanGenerator):
@@ -402,11 +431,12 @@ class ArcLengthGenerator(GeoPlanGenerator):
         'angle': 'str'
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, radius_range=RADIUS_RANGE, angle_range=ANGLE_RANGE, num_splices=5):
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, radius_range=RADIUS_RANGE, angle_range=ANGLE_RANGE, num_splices=5):
         super().__init__(metadata, seed=seed)
         self.radius_range = radius_range
         self.angle_range = angle_range
         self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
 
     def enumerate_task_plans(self, task_store: TaskStore):
         radius_values = np.linspace(self.radius_range[0], self.radius_range[1], self.num_splices)
@@ -425,18 +455,29 @@ class ArcLengthGenerator(GeoPlanGenerator):
                         }
                         task_store.add(task_plan)
 
-    def _generate_task(self, task_plan) -> Tuple[str, str, List[str], Dict]:
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
         template = task_plan['question_template']
         radius = float(task_plan['radius'])
         angle = float(task_plan['angle'])
 
-        # Calculate the arc length
         arc_length = (np.pi * radius * angle) / 180
 
         question = template.format(radius=radius, angle=angle)
         answer = str(arc_length)
         
-        return question, answer, self.metadata
+        options = []
+        if self.multiple_choice:
+            options.append(answer)
+            options.append(str(2 * np.pi * radius * (angle / 360))) 
+            options.append(str(np.pi * radius * angle / 360))  # wrong denominator for degrees
+            options.append(str(np.pi * radius**2 * angle / 180))  # area of a sector
+            options.append(str(np.pi * angle / 180))
+            
+            options = list(dict.fromkeys(options))
+            np.random.shuffle(options)
+        
+        return question, options, answer, self.metadata
+
 
 
 class CircleGenerator(GeoPlanGenerator):
@@ -845,11 +886,12 @@ class PointDistanceGenerator(GeoPlanGenerator):
         'point2': 'str'
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, x_range=X_COORDINATE_RANGE, y_range=Y_COORDINATE_RANGE, num_splices=10):
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, x_range=X_COORDINATE_RANGE, y_range=Y_COORDINATE_RANGE, num_splices=10):
         super().__init__(metadata, seed=seed)
         self.x_range = x_range
         self.y_range = y_range
         self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
 
     def enumerate_task_plans(self, task_store: TaskStore):
         x_values = np.linspace(self.x_range[0], self.x_range[1], self.num_splices)
@@ -863,7 +905,7 @@ class PointDistanceGenerator(GeoPlanGenerator):
                     for y1 in y_values:
                         for x2 in x_values:
                             for y2 in y_values:
-                                if (x1, y1) != (x2, y2):  # Ensure points are not identical
+                                if (x1, y1) != (x2, y2): 
                                     task_plan = {
                                         'question_template': template,
                                         'point1': str((x1, y1)),
@@ -871,7 +913,7 @@ class PointDistanceGenerator(GeoPlanGenerator):
                                     }
                                     task_store.add(task_plan)
 
-    def _generate_task(self, task_plan) -> Tuple[str, str, List[str], Dict]:
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
         template = task_plan['question_template']
         point1 = eval(task_plan['point1'])
         point2 = eval(task_plan['point2'])
@@ -881,7 +923,17 @@ class PointDistanceGenerator(GeoPlanGenerator):
         question = template.format(point1=point1, point2=point2)
         answer = str(distance)
         
-        return question, answer, self.metadata        
+        options = []
+        if self.multiple_choice:
+            options.append(str(distance))
+            options.append(str(abs(point2[0] - point1[0]) + abs(point2[1] - point1[1]))) 
+            options.append(str(abs(point2[0] - point1[0])))  # Horizontal distance
+            options.append(str(abs(point2[1] - point1[1])))  # Vertical distance 
+            options.append(str((distance + abs(point2[0] - point1[0]) + abs(point2[1] - point1[1])) / 3))
+            options = list(dict.fromkeys(options))  
+            np.random.shuffle(options)
+        
+        return question, options, answer, self.metadata        
 
 
 class PythagoreanTheoremGenerator(GeoPlanGenerator):
