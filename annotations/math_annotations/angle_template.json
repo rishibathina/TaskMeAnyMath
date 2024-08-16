@@ -1,18 +1,18 @@
 {
     "template1": {
-        "text": "Given angles of {0} degrees, {1} degrees, and {2} degrees, identify the shape.",
-        "num_params": 3
+        "text": "Identify the shape with an angle of {0} degrees.",
+        "num_params": 1
     },
     "template2": {
-        "text": "Given angles of {0}, {1}, {2}, and {3} degrees, what shape is it?",
-        "num_params": 4
+        "text": "What shape has an angle of {0} degrees?",
+        "num_params": 1
     },
     "template3": {
-        "text": "What shape has angles of {0}, {1}, {2}, {3}, and {4} degrees?",
-        "num_params": 5
+        "text": "Which shape corresponds to an angle of {0} degrees?",
+        "num_params": 1
     },
     "template4": {
-        "text": "Identify the shape with angles of {0}, {1}, {2}, {3}, {4}, and {5} degrees.",
-        "num_params": 6
+        "text": "Determine the shape with an angle of {0} degrees.",
+        "num_params": 1
     }
 }

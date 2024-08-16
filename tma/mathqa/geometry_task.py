@@ -488,10 +488,11 @@ class CircleGenerator(GeoPlanGenerator):
         'area': 'str'
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, num_tasks=100):
+    def __init__(self, metadata: MathTemplateMetaData, seed=42, num_tasks=100, multiple_choice=False):
         super().__init__(metadata, seed=seed)
         self.num_tasks = num_tasks
         self.all_tasks = set()
+        self.multiple_choice = multiple_choice
 
     def _task_plan_to_str(self, task_plan) -> str:
         return json.dumps(task_plan)
@@ -533,25 +534,62 @@ class CircleGenerator(GeoPlanGenerator):
         radius = float(task_plan['radius'])
         circumference = float(task_plan['circumference'])
         area = float(task_plan['area'])
+        options = []
         
         if 'circumference' in template or 'perimeter' in template:
             if 'radius' in template:
                 question = template.format(param1=radius)
+                # in this case, we are looking for circumference, known radius
+                # the correct formula would be circumference = 2 * np.pi * radius
                 answer = circumference
+                if self.multiple_choice:
+                    option1 = np.pi * radius  # forget the 2
+                    option2 = 0.5 * np.pi * radius
+                    option3 = np.pi * radius ** 2  # think it's area calculation
+                    options.append(option1)
+                    options.append(option2)
+                    options.append(option3)
             else:
                 question = template.format(param1=circumference)
                 answer = radius
+                # in this case, we know circumference and try to know the radius
+                # correct formula to calculate radius would be circumference/ (2 * np.pi)
+                if self.multiple_choice:
+                    option1 =  circumference/ (np.pi)
+                    option2 =  circumference/ (0.5 * np.pi)
+                    option3 =  np.sqrt(circumference / np.pi)
+                    options.append(option1)
+                    options.append(option2)
+                    options.append(option3) 
         elif 'area' in template:
             if 'radius' in template:
                 question = template.format(param1=radius)
                 answer = area
+                # known radius, calculate area
+                # the correct formula would be np.pi * radius ** 2
+                if self.multiple_choice:
+                    option1 = np.pi * radius
+                    option2 = np.pi * radius ** 3
+                    option3 = 2 * np.pi * radius
+                    options.append(option1)
+                    options.append(option2)
+                    options.append(option3)
             else:
                 question = template.format(param1=area)
                 answer = radius
+                # known area, calculate the radius
+                # correct formula here is np.sqrt(area / np.pi)
+                if self.multiple_choice:
+                    option1 = area / np.pi
+                    option2 = 2 * np.sqrt(area / np.pi)
+                    option3 = area/ (2 * np.pi)
+                    options.append(option1)
+                    options.append(option2)
+                    options.append(option3)
         else:
             raise ValueError("Template must specify either perimeter, area, or radius.")
-
-        return question, str(answer), self.metadata
+        np.random.shuffle(options)
+        return question, str(answer), options, self.metadata
     
 
 class TriangleAreaGenerator(GeoPlanGenerator):
@@ -610,6 +648,7 @@ class TriangleAreaGenerator(GeoPlanGenerator):
             options.append(option3)
         question_text = question.format(base, height)
         area = str(area)
+        np.random.shuffle(options)
         return question_text, area, options, self.metadata
 
 
@@ -620,7 +659,7 @@ class AngleSumGenerator(GeoPlanGenerator):
         'sides': 'int'
     }
     
-    def __init__(self, metadata, seed=42):
+    def __init__(self, metadata, seed=42, multiple_choice=False):
         super().__init__(metadata, seed=seed)
         self.all_tasks = set()
         # store possible shapes
@@ -634,6 +673,7 @@ class AngleSumGenerator(GeoPlanGenerator):
             'nonagon': 9,
             'decagon': 10
         }
+        self.multiple_choice = multiple_choice
         
          
     def _task_plan_to_str(self, task_plan):
@@ -665,7 +705,16 @@ class AngleSumGenerator(GeoPlanGenerator):
         angle_sum = (side - 2) * 180
         question = template.format(shape)
         answer = str(angle_sum)
-        return question, answer, self.metadata
+        options = []
+        if self.multiple_choice:
+            while len(options) < 3:
+                wrong_shape = np.random.choice(list(self.shapes.keys()))
+                wrong_sides = self.shapes[wrong_shape]
+                wrong_angle_sum = (wrong_sides - 2) * 180
+                if wrong_angle_sum != angle_sum and wrong_angle_sum not in options:
+                    options.append(wrong_angle_sum)
+        np.random.shuffle(options)
+        return question, answer, options, self.metadata
 
 
 class VolumeRectangularPrismGenerator(GeoPlanGenerator):
@@ -727,6 +776,7 @@ class VolumeRectangularPrismGenerator(GeoPlanGenerator):
             options.append(option3)
         question = template.format(length, width, height)
         answer = str(volume)
+        np.random.shuffle(options)
         return question, answer, options, self.metadata
         
 
@@ -736,10 +786,10 @@ class AngleGenerator(GeoPlanGenerator):
         'angles': 'list'  # Store list of angles
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, num_tasks=100):
+    def __init__(self, metadata: MathTemplateMetaData, seed=42, num_tasks=100, multiple_choice = False):
         super().__init__(metadata, seed=seed)
         self.num_tasks = num_tasks
-        self.all_tasks = set()
+        self.multiple_choice = multiple_choice
     
     def _task_plan_to_str(self, task_plan) -> str:
         return json.dumps(task_plan)
@@ -748,21 +798,19 @@ class AngleGenerator(GeoPlanGenerator):
         # store tasks in the task store
         template_breakdown = self.metadata.templates_by_num_params
         shapes = {
-            'triangle': [60, 60, 60],
-            'rectangle': [90, 90, 90, 90],
-            'pentagon': [108, 108, 108, 108, 108],
-            'hexagon': [120, 120, 120, 120, 120, 120]
+            'equilateral triangle': 60,
+            'rectangle': 90,
+            'regular pentagon': 108,
+            'regular hexagon': 120
         }
         for num_params, templates in template_breakdown.items():
             for template_text in tqdm(templates, desc=f"Enumerating templates with {num_params} params"):
                 for shape, angles in shapes.items():
-                    if len(angles) == num_params:
-                        task_plan = {
-                            'question_template': template_text,
-                            'angles': angles
-                        }
-                        task_store.add(task_plan)
-                        self.all_tasks.add(tuple(angles))
+                    task_plan = {
+                        'question_template': template_text,
+                        'angles': angles
+                    }
+                    task_store.add(task_plan)
         
     def _generate_task(self, task_plan) -> Tuple[str, str, Dict]:
         # generate the single task
@@ -771,20 +819,37 @@ class AngleGenerator(GeoPlanGenerator):
 
         template = task_plan['question_template']
         angles = task_plan['angles']
-
-        if len(angles) == 3:
-            answer = "triangle"
-        elif len(angles) == 4:
+        options = []
+        if angles == 60:
+            answer = "equilateral triangle"
+            if self.multiple_choice:
+                options.append("rectangle")
+                options.append("regular pentagon")
+                options.append("regular hexagon")
+        elif angles == 90:
             answer = "rectangle"
-        elif len(angles) == 5:
-            answer = "pentagon"
-        elif len(angles) == 6:
-            answer = "hexagon"
+            if self.multiple_choice:
+                options.append("equilateral triangle")
+                options.append("regular pentagon")
+                options.append("regular hexagon")
+        elif angles == 108:
+            answer = "regular pentagon"
+            if self.multiple_choice:
+                options.append("equilateral triangle")
+                options.append("rectangle")
+                options.append("regular hexagon")
+        elif angles == 120:
+            answer = "regular hexagon"
+            if self.multiple_choice:
+                options.append("equilateral triangle")
+                options.append("rectangle")
+                options.append("regular pentagon")
         else:
             answer = "unreasonable shape"
 
-        question = template.format(*angles)
-        return question, answer, self.metadata
+        question = template.format(angles)
+        np.random.shuffle(options)
+        return question, answer, options, self.metadata
     
 
 class VolumeSphereGenerator(GeoPlanGenerator):
@@ -793,12 +858,13 @@ class VolumeSphereGenerator(GeoPlanGenerator):
         'radius': 'str'
     }
 
-    def __init__(self, metadata, seed=42, radius_range=(1, 20), num_tasks=100):
+    def __init__(self, metadata, seed=42, radius_range=(1, 20), num_tasks=100, multiple_choice=False):
         super().__init__(metadata, seed=seed)
         self.num_tasks = num_tasks
         self.all_tasks = set()
         self.radius_range = radius_range
         self.seed = seed
+        self.multiple_choice = multiple_choice
 
     def _task_plan_to_str(self, task_plan):
         # Serialize task plan for uniqueness checking
@@ -823,9 +889,18 @@ class VolumeSphereGenerator(GeoPlanGenerator):
         template = task_plan['question_template']
         radius = float(task_plan['radius'])
         volume = (4/3) * np.pi * (radius ** 3)
+        options = []
         question = template.format(radius)
         answer = f"{volume:.2f} cubic units"
-        return question, answer, self.metadata
+        if self.multiple_choice:
+            option1 = np.pi * (radius ** 3)
+            option2 = (1/3) * np.pi * (radius ** 3)
+            option3 = (4/3) * np.pi * (radius ** 2)
+            options.append(option1)
+            options.append(option2)
+            options.append(option3)
+        np.random.shuffle(options)
+        return question, answer, options, self.metadata
 
 
 class ConeVolumeGenerator:
@@ -835,7 +910,7 @@ class ConeVolumeGenerator:
         'height': 'str'
     }
 
-    def __init__(self, metadata, seed=42, radius_range=(1, 20), height_range=(1, 20), num_tasks=100):
+    def __init__(self, metadata, seed=42, radius_range=(1, 20), height_range=(1, 20), num_tasks=100, multiple_choice=False):
         self.metadata = metadata
         self.seed = seed
         self.radius_range = radius_range
@@ -843,6 +918,7 @@ class ConeVolumeGenerator:
         self.num_tasks = num_tasks
         self.all_tasks = set()
         np.random.seed(self.seed)
+        self.multiple_choice = multiple_choice
 
     def _task_plan_to_str(self, task_plan):
         # Serialize task plan for uniqueness checking
@@ -871,9 +947,18 @@ class ConeVolumeGenerator:
         radius = float(task_plan['radius'])
         height = float(task_plan['height'])
         volume = (1/3) * np.pi * (radius ** 2) * height
+        options = []
+        if self.multiple_choice:
+            option1 = (4/3) * np.pi * (radius ** 3)
+            option2 = (4/3) * np.pi * (radius ** 2) * height
+            option3 = np.pi * (radius ** 2) * height
+            options.append(option1)
+            options.append(option2)
+            options.append(option3)
         question = template.format(radius, height)
         answer = f"{volume:.2f} cubic cm"
-        return question, answer, self.metadata
+        np.random.shuffle(options)
+        return question, answer, options, self.metadata
 
 
 class PointDistanceGenerator(GeoPlanGenerator):
