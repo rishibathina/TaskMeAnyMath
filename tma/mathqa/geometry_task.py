@@ -1144,9 +1144,6 @@ class PointSlopeGenerator(GeoPlanGenerator):
         return question, options, answer, self.metadata
 
 
-import numpy as np
-from sympy import symbols, lambdify
-
 class RemainderTheoremGenerator(GeoPlanGenerator):
     COEFF_RANGE = (-5, 5)
 
@@ -1204,7 +1201,6 @@ class RemainderTheoremGenerator(GeoPlanGenerator):
             options.append(str(remainder - np.random.randint(-5, 5)))
         
         return question, options, answer, self.metadata
-
 
 
 class QuadraticFormulaGenerator(GeoPlanGenerator):
