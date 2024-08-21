@@ -1,0 +1,6 @@
+{
+    "template1": {
+        "text": "What are the solutions to the quadratic equation {a}x^2 + {b}x + {c} = 0 using the quadratic formula?",
+        "num_params": 3
+    }
+}

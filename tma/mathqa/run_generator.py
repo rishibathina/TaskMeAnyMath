@@ -2,7 +2,8 @@ import random
 from geometry_task import (
     MathTemplateMetaData, PerimeterGenerator, MidpointGenerator,IntersectionGenerator, 
     PerimeterGenerator, AngleGenerator, PerpendicularGenerator, SideLengthGenerator,
-     ArcLengthGenerator, CircleGenerator, PointDistanceGenerator, PythagoreanTheoremGenerator, TaskStore
+     ArcLengthGenerator, CircleGenerator, PointDistanceGenerator, PythagoreanTheoremGenerator,
+    PointSlopeGenerator, RemainderTheoremGenerator, QuadraticFormulaGenerator, TaskStore
 )
 
 def main():
@@ -18,25 +19,28 @@ def main():
     Circle_template_path = r'C:\Users\jiata\OneDrive\Desktop\Raivn\TaskMeAnyMath\annotations\math_annotations\circle_templates.json'
     PointDistance_template_path = r'C:\Users\jiata\OneDrive\Desktop\Raivn\TaskMeAnyMath\annotations\math_annotations\point_distance_template.json'
     PythagoreanTheorem_template_path = r'C:\Users\jiata\OneDrive\Desktop\Raivn\TaskMeAnyMath\annotations\math_annotations\pythagoreanTheorem_template.json'
+    PointSlope_template_path = r"C:\Users\jiata\OneDrive\Desktop\Raivn\TaskMeAnyMath\annotations\math_annotations\point_slope_templates.json"
+    RemainderTheorem_template_path = r"C:\Users\jiata\OneDrive\Desktop\Raivn\TaskMeAnyMath\annotations\math_annotations\remainderTheorem_template.json"
+    QuadraticFormula_template_path = r"C:\Users\jiata\OneDrive\Desktop\Raivn\TaskMeAnyMath\annotations\math_annotations\quadraticFormula_templates.json"
 
-    Intersection_metadata = MathTemplateMetaData(template_path=Intersection_template_path)
+    QuadraticFormula_metadata = MathTemplateMetaData(template_path=QuadraticFormula_template_path)
 
-    Intersection_task_store = TaskStore(schema = IntersectionGenerator.schema)
+    QuadraticFormula_task_store = TaskStore(schema = QuadraticFormulaGenerator.schema)
 
-    # metadata = MathTemplateMetaData(template_path=Intersection_template_path)
-    metadata = MathTemplateMetaData(template_path=Intersection_template_path)
+    # metadata = MathTemplateMetaData(template_path=QuadraticFormula_template_path)
+    metadata = MathTemplateMetaData(template_path=QuadraticFormula_template_path)
 
-    Intersection_generator = IntersectionGenerator(metadata=Intersection_metadata)
-    Intersection_generator.enumerate_task_plans(Intersection_task_store)
+    QuadraticFormula_generator = QuadraticFormulaGenerator(metadata=QuadraticFormula_metadata)
+    QuadraticFormula_generator.enumerate_task_plans(QuadraticFormula_task_store)
  
     # Select and print a random task
-    Intersection_tasks = list(Intersection_task_store)
-    if Intersection_tasks:
-        random_Intersection_task = random.choice(Intersection_tasks)
-        Intersection_task = Intersection_generator.generate(random_Intersection_task)
-        print("Random Intersection Task:")
-        print("Question:", Intersection_task['question'])
-        print("Options:", Intersection_task['options'])
-        print("Answer:", Intersection_task['answer'])
+    QuadraticFormula_tasks = list(QuadraticFormula_task_store)
+    if QuadraticFormula_tasks:
+        random_QuadraticFormula_task = random.choice(QuadraticFormula_tasks)
+        QuadraticFormula_task = QuadraticFormula_generator.generate(random_QuadraticFormula_task)
+        print("Random QuadraticFormula Task:")
+        print("Question:", QuadraticFormula_task['question'])
+        print("Options:", QuadraticFormula_task['options'])
+        print("Answer:", QuadraticFormula_task['answer'])
 if __name__ == "__main__":
     main()

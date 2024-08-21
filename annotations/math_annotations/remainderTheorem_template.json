@@ -1,0 +1,6 @@
+{
+    "template1": {
+        "text": "What is the remainder when the polynomial {polynomial} is divided by (x - {root})?",
+        "num_params": 2
+    }
+}

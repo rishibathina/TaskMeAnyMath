@@ -4,6 +4,7 @@ import sys
 from typing import Dict, List, Tuple
 
 import numpy as np 
+from sympy import symbols, Eq, solve, sqrt
 from tqdm import tqdm
 
 from baseMath import TaskGenerator
@@ -1072,3 +1073,206 @@ class PythagoreanTheoremGenerator(GeoPlanGenerator):
             #np.random.shuffle(options)
         
         return question, options, answer, self.metadata
+
+
+class PointSlopeGenerator(GeoPlanGenerator):
+    COORDINATE_RANGE = (-100, 100)
+
+    schema = {
+        'question_template': 'str',
+        'x1': 'str',
+        'y1': 'str',
+        'x2': 'str',
+        'y2': 'str'
+    }
+
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, coordinate_range=COORDINATE_RANGE, num_splices=10):
+        super().__init__(metadata, seed=seed)
+        self.coordinate_range = coordinate_range
+        self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        x_values = np.linspace(self.coordinate_range[0], self.coordinate_range[1], self.num_splices)
+        y_values = np.linspace(self.coordinate_range[0], self.coordinate_range[1], self.num_splices)
+
+        template_breakdown = self.metadata.templates_by_num_params
+
+        for param_count, templates in template_breakdown.items():
+            for template in tqdm(templates, desc="Enumerating templates for Point Slope tasks"):
+                for x1 in x_values:
+                    for y1 in y_values:
+                        for x2 in x_values:
+                            for y2 in y_values:
+                                # Avoid degenerate case where both points are identical
+                                if x1 != x2 or y1 != y2:
+                                    task_plan = {
+                                        'question_template': template,
+                                        'x1': str(x1),
+                                        'y1': str(y1),
+                                        'x2': str(x2),
+                                        'y2': str(y2)
+                                    }
+                                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
+        template = task_plan['question_template']
+        x1 = float(task_plan['x1'])
+        y1 = float(task_plan['y1'])
+        x2 = float(task_plan['x2'])
+        y2 = float(task_plan['y2'])
+
+        slope = (y2 - y1) / (x2 - x1) if x2 != x1 else None
+        
+        question = template.format(x1=x1, y1=y1, x2=x2, y2=y2)
+        answer = str(slope) if slope is not None else "undefined"
+        
+        options = []
+        if self.multiple_choice:
+            if slope is not None:
+                options.append(str(slope))
+                options.append(str(-slope))  # Negative of the correct slope
+                options.append((y2 - y1) / (x2 - x1)/2) 
+                options.append("undefined" if slope != 0 else str(slope))
+            else:
+                options.append("undefined")
+                options.append("0")  # Zero slope 
+                options.append(str(np.inf))  # Infinite slope 
+                options.append(str(-np.inf))  
+        
+        
+        return question, options, answer, self.metadata
+
+
+import numpy as np
+from sympy import symbols, lambdify
+
+class RemainderTheoremGenerator(GeoPlanGenerator):
+    COEFF_RANGE = (-5, 5)
+
+    schema = {
+        'question_template': 'str',
+        'polynomial': 'str',
+        'root': 'str'
+    }
+
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, coeff_range=COEFF_RANGE, num_splices=10):
+        super().__init__(metadata, seed=seed)
+        self.coeff_range = coeff_range
+        self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        roots = np.linspace(self.coeff_range[0], self.coeff_range[1], self.num_splices)
+        coefficients = np.linspace(self.coeff_range[0], self.coeff_range[1], self.num_splices)
+
+        template_breakdown = self.metadata.templates_by_num_params
+
+        x = symbols('x')
+        for param_count, templates in template_breakdown.items():
+            for template in tqdm(templates, desc="Enumerating templates for Remainder Theorem tasks"):
+                for root in roots:
+                    for a in coefficients:
+                        for b in coefficients:
+                            for c in coefficients:
+                                polynomial_expr = a*x**2 + b*x + c
+                                polynomial_str = str(polynomial_expr)
+                                task_plan = {
+                                    'question_template': template,
+                                    'polynomial': polynomial_str,
+                                    'root': str(root)
+                                }
+                                task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
+        template = task_plan['question_template']
+        polynomial_str = task_plan['polynomial']
+        root = float(task_plan['root'])
+
+        x = symbols('x')
+        polynomial = eval(polynomial_str)
+        remainder = polynomial.subs(x, root)
+        
+        question = template.format(polynomial=polynomial_str, root=root)
+        answer = str(remainder)
+        
+        options = []
+        if self.multiple_choice:
+            options.append(str(remainder))
+            options.append(str(remainder + np.random.randint(-5, 5) - remainder / 2))  
+            options.append("0")  # Common incorrect answer if confused with factors
+            options.append(str(remainder - np.random.randint(-5, 5)))
+        
+        return question, options, answer, self.metadata
+
+
+
+class QuadraticFormulaGenerator(GeoPlanGenerator):
+    COEFF_RANGE = (-10, 10)
+
+    schema = {
+        'question_template': 'str',
+        'a': 'str',
+        'b': 'str',
+        'c': 'str'
+    }
+
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, coeff_range=COEFF_RANGE, num_splices=10):
+        super().__init__(metadata, seed=seed)
+        self.coeff_range = coeff_range
+        self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        coefficients = np.linspace(self.coeff_range[0], self.coeff_range[1], self.num_splices)
+
+        template_breakdown = self.metadata.templates_by_num_params
+
+        for param_count, templates in template_breakdown.items():
+            for template in tqdm(templates, desc="Enumerating templates for Quadratic Formula tasks"):
+                for a in coefficients:
+                    for b in coefficients:
+                        for c in coefficients:
+                            if a != 0:  
+                                discriminant = b**2 - 4*a*c
+                                if discriminant >= 0: 
+                                    task_plan = {
+                                        'question_template': template,
+                                        'a': str(a),
+                                        'b': str(b),
+                                        'c': str(c)
+                                    }
+                                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
+        template = task_plan['question_template']
+        a = float(task_plan['a'])
+        b = float(task_plan['b'])
+        c = float(task_plan['c'])
+
+        x = symbols('x')
+        quadratic_eq = Eq(a*x**2 + b*x + c, 0)
+        solutions = solve(quadratic_eq, x)
+        solutions = [str(round(float(sol), 2)) for sol in solutions]  # Ensure solutions are evaluated to real numbers
+
+        question = template.format(a=a, b=b, c=c)
+        answer = ' & '.join(solutions)
+        incorrect_div_by_a_1 = (-b + sqrt(b**2 - 4*a*c)) / a
+        incorrect_div_by_a_2 = (-b - sqrt(b**2 - 4*a*c)) / a
+        incorrect_div_by_a = [str(round(float(incorrect_div_by_a_1), 2)), str(round(float(incorrect_div_by_a_2), 2))]
+
+        incorrect_plus_b_1 = (b + sqrt(b**2 - 4*a*c)) / a
+        incorrect_plus_b_2 = (b - sqrt(b**2 - 4*a*c)) / a
+        incorrect_plus_b= [str(round(float(incorrect_plus_b_1), 2)), str(round(float(incorrect_plus_b_2), 2))]
+        
+        options = []
+        if self.multiple_choice:
+            options.append(answer)
+            options.append(' & '.join(incorrect_div_by_a))
+            options.append(' & '.join(incorrect_plus_b))
+            incorrect1 = str(np.random.choice(solutions))  # One root only
+            options.extend([incorrect1])
+            
+        
+        return question, options, answer, self.metadata
+
