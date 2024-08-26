@@ -1,0 +1,18 @@
+{
+    "template1": {
+        "text": "Calculate the volume of a cone with a radius of {0} cm and a height of {1} cm.",
+        "num_params": 2
+    },
+    "template2": {
+        "text": "A cone has a radius of {0} cm and a height of {1} cm. What is its volume?",
+        "num_params": 2
+    },
+    "template3": {
+        "text": "Find the volume of a cone when the radius is {0} cm and the height is {1} cm.",
+        "num_params": 2
+    },
+    "template4": {
+        "text": "If a cone's radius measures {0} cm and its height measures {1} cm, determine the volume of the cone.",
+        "num_params": 2
+    }
+}

@@ -1,0 +1,6 @@
+{
+    "template1": {
+        "text": "What is the length of the hypotenuse of a right triangle with legs of length {leg1} and {leg2} units?",
+        "num_params": 2
+    }
+}

@@ -1,0 +1,6 @@
+{
+    "template1": {
+        "text": "What is the distance between the points {point1} and {point2}?",
+        "num_params": 2
+    }
+}

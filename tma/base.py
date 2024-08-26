@@ -3,14 +3,14 @@ from typing import Dict
 import numpy as np
 
 from constant import NUM_OPTIONS
-from metadata import MetaData
+from metadata import MathTemplateMetaData
 from task_store import TaskStore
 
 
 class TaskGenerator:
 	schema = {}
 
-	def __init__(self, metadata: MetaData, seed=42):
+	def __init__(self, metadata: MathTemplateMetaData, seed=42):
 		self.metadata = metadata
 		self.rng = np.random.default_rng(seed=seed)
 
@@ -31,7 +31,7 @@ class TaskGenerator:
 
 
 class JointTaskGenerator:
-	def __init__(self, metadata: MetaData, generators: Dict, seed=42):
+	def __init__(self, metadata: MathTemplateMetaData, generators: Dict, seed=42):
 		self.generators = {
 			k: v(metadata, seed=seed) for k, v in generators.items()
 		}

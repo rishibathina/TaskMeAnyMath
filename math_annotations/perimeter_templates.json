@@ -1,14 +1,14 @@
 {
     "template1": {
-        "text": "What is the perimeter of an isoceles triangle of side length {param1} and hypotenuse {param2}?",
-        "num_params": 2
-    },
-    "template2": {
-        "text": "What is the perimeter of a triangle with side lengths {param1}, {param2}, and {param3}?",
+        "text": "What is the perimeter of a triangle with sides {side_one}, {side_two}, and {side_three}?",
         "num_params": 3
     },
+    "template2": {
+        "text": "What is the perimeter of an isosceles triangle with two sides of length {side_one} and one side of length {side_two}?",
+        "num_params": 2
+    },
     "template3": {
-        "text": "What is the perimeter of an equilateral triangle with side length {param1}?",
+        "text": "What is the perimeter of an equilateral triangle with sides of length {side_one}?",
         "num_params": 1
     }
 }

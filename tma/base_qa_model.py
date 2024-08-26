@@ -7,8 +7,6 @@ import numpy as np
 import sentence_transformers
 import torch
 
-from .. import Model
-
 
 def make_options(choices, format='letter'):
 	assert format in ['numeric', 'letter']
@@ -32,6 +30,8 @@ class QAModelInstance:
 	def qa(self, data, prompt):
 		"(Abstract method) abstract QA method"
 
+class Model:
+	model_name: str
 
 class QAModel(Model):
 	def __init__(

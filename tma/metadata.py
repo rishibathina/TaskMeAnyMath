@@ -1,5 +1,4 @@
 import json
-from base import MetaData
 
 def handle_templates(template_path):
         # iterate through json file and seperate into different number of params

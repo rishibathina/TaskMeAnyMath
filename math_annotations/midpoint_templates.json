@@ -1,6 +1,6 @@
 {
     "template1": {
-        "text": "What is the midpoint of {param1} and {param2}?",
+        "text": "What is the midpoint of {param1} and {param2}? Write your answer in the format (cord1, ..., coordN).",
         "num_params": 2
     }
 }

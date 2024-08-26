@@ -10,9 +10,9 @@ import diskcache
 import numpy as np
 from tqdm import tqdm, trange
 
-from . import Model
-from .models.qa_model import QAModel
-from .task_store import get_pd_schema
+# from . import Model
+from base_qa_model import QAModel, Model
+from task_store import get_pd_schema
 
 
 def apply_aggregate_function(x, aggregate_func: Union[str, Callable]):

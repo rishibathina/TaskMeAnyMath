@@ -83,15 +83,15 @@ class TaskStore:
 	def get_tasks(self):
 		self.dump()
 		if self.output_file is None:
-				return self.task_plan_df.to_dict('records')
+			return self.task_plan_df.to_dict('records')
 		else:
 			return [] 
 
 	def __iter__(self):
-			self.dump()
-			if self.output_file is None:
-				for _, task in self.task_plan_df.iterrows():
-					yield task.to_dict()
-			else:
-				yield from []
+		self.dump()
+		if self.output_file is None:
+			for _, task in self.task_plan_df.iterrows():
+				yield task.to_dict()
+		else:
+			yield from []
     
