@@ -1,0 +1,6 @@
+{
+    "template1": {
+        "text": "Find the remainder when the polynomial {polynomial} is divided by (x - {root}).",
+        "num_params": 2
+    }
+}

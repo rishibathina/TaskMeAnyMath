@@ -1,0 +1,10 @@
+{
+    "template1": {
+        "text": "Factor the quadratic polynomial {a}x^2 + {b}x + {c}.",
+        "num_params": 3
+    },
+    "template2": {
+        "text": "Find the factors of the quadratic expression {a}x^2 + {b}x + {c}.",
+        "num_params": 3
+    }
+}

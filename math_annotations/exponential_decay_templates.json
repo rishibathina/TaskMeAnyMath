@@ -1,0 +1,6 @@
+{
+    "template1": {
+        "text": "Given an initial quantity of {N0} units and a decay constant of {k}, what is the quantity remaining after {t} time units?",
+        "num_params": 3
+    }
+}

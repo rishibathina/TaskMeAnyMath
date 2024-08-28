@@ -1,13 +1,14 @@
 import random
 from geometry_task import AngleGenerator, AngleSumGenerator, ArcLengthGenerator, CircleGenerator, ConeVolumeGenerator, IntersectionGenerator, MathTemplateMetaData, MidpointGenerator, PerimeterGenerator, PointDistanceGenerator, PythagoreanTheoremGenerator, SideLengthGenerator, TaskStore, TriangleAreaGenerator, VolumeRectangularPrismGenerator, VolumeSphereGenerator
+from algebra_task import PointSlopeGenerator, QuadraticFormulaGenerator, RemainderTheoremGenerator, ExponentialDecayGenerator, PolynomialFactoringGenerator
 import os
 
 
 def main():
-    templates = ["cone_volume_templates.json"]
+    templates = ["polynomial_factor_templates.json"]
     mc = True
     for template in templates:
-        template_path = "../math_annotations/" + template
+        template_path = "./math_annotations/" + template
         metadata = MathTemplateMetaData(template_path=template_path)
         if "circle" in template:
             generator = CircleGenerator(metadata=metadata, multiple_choice=mc)
@@ -48,6 +49,21 @@ def main():
                 metadata=metadata, multiple_choice=mc)
         elif "arcLength" in template:
             generator = ArcLengthGenerator(
+                metadata=metadata, multiple_choice=mc)
+        elif "slope" in template:
+            generator = PointSlopeGenerator(
+                metadata=metadata, multiple_choice=mc)
+        elif "remainder" in template:
+            generator = RemainderTheoremGenerator(
+                metadata=metadata, multiple_choice=mc)
+        elif "quadratic" in template:
+            generator = QuadraticFormulaGenerator(
+                metadata=metadata, multiple_choice=mc)
+        elif "exponential" in template:
+            generator = ExponentialDecayGenerator(
+                metadata=metadata, multiple_choice=mc)
+        elif "polynomial" in template:
+            generator = PolynomialFactoringGenerator(
                 metadata=metadata, multiple_choice=mc)
     
         task_store = TaskStore(schema=generator.schema)
