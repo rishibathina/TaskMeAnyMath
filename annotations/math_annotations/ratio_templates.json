@@ -1,0 +1,18 @@
+{
+    "template1": {
+        "text": "At a bookstore, the ratio of the price of a notebook to a pen is {0}:{1}. If the price of a notebook is {2} dollars, how many dollars does a pen cost?",
+        "num_params": 3
+    },
+    "template2": {
+        "text": "A recipe requires flour and sugar in the ratio {0}:{1}. If you have {2} grams of flour, how much sugar do you need?",
+        "num_params": 3
+    },
+    "template3": {
+        "text": "The ratio of width to height of a screen is {0}:{1}. If the width is {2} cm, what is the height?",
+        "num_params": 3
+    },
+    "template4": {
+        "text": "In a fruit basket, the ratio of the weight of apples to oranges is {0}:{1}. If there are {2} kilograms of apples, how many kilograms of oranges are there?",
+        "num_params": 3
+    }
+}

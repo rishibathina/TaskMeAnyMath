@@ -1,0 +1,18 @@
+{
+    "template1": {
+        "text": "Add the following matrices:\nMatrix A:\n{0}\nMatrix B:\n{1}",
+        "num_params": 2
+    },
+    "template2": {
+        "text": "Find the result when you add these two matrices:\nMatrix A:\n{0}\nMatrix B:\n{1}",
+        "num_params": 2
+    },
+    "template3": {
+        "text": "Subtract Matrix B from Matrix A:\nMatrix A:\n{0}\nMatrix B:\n{1}",
+        "num_params": 2
+    },
+    "template4": {
+        "text": "Calculate the result of the subtraction:\nMatrix A:\n{0}\nminus\nMatrix B:\n{1}",
+        "num_params": 2
+    }
+}

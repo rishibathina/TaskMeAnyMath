@@ -104,3 +104,65 @@ for i in range(0, 50):
     question, answer, _ = task
     print(question)
     print("Answer:", answer)
+    
+# run the matrix
+template_path = 'annotations/math_annotations/matrix_templates.json'
+metadata = MathTemplateMetaData(template_path)
+generator = MatrixProblemGenerator(metadata, multiple_choice = True)
+task_store = TaskStore(MatrixProblemGenerator.schema)
+generator.enumerate_task_plans(task_store)
+all_tasks = task_store.return_df().to_dict(orient='records')
+for i in range(0, 50):
+    random_task_plan = random.choice(all_tasks)
+    task = generator._generate_task(random_task_plan)
+    question, options, answer, _ = task
+    print(question)
+    print("Answer: ", options)
+    
+# the linear_systems problems
+template_path = 'annotations/math_annotations/linear_system_templates.json'
+metadata = MathTemplateMetaData(template_path)
+generator = LinearEquationSystemGenerator(metadata, num_equations=2, multiple_choice=True)
+task_store = TaskStore(LinearEquationSystemGenerator.schema)
+
+generator.enumerate_task_plans(task_store)
+all_tasks = task_store.return_df().to_dict(orient='records')
+
+for i in range(0, 50):
+    random_task_plan = random.choice(all_tasks)
+    task = generator._generate_task(random_task_plan)
+    question, options, answer, _ = task
+    print(question)
+    print("Answer:", answer)
+    if options:
+        for key, value in options.items():
+            print(f"{key}: {value}")
+            
+# the basic operations problems
+template_path = 'annotations/math_annotations/basic_operation_templates.json'
+metadata = MathTemplateMetaData(template_path)
+generator = BasicArithmeticOperationsGenerator(metadata, multiple_choice = True)
+task_store = TaskStore(BasicArithmeticOperationsGenerator.schema)
+generator.enumerate_task_plans(task_store)
+all_tasks = task_store.return_df().to_dict(orient='records')
+for i in range(0, 50):
+    random_task_plan = random.choice(all_tasks)
+    task = generator._generate_task(random_task_plan)
+    question, options, answer, _ = task
+    print(question)
+    print("Answer: ", options)
+    
+# simple exponents
+template_path = 'annotations/math_annotations/exponent_templates.json'
+metadata = MathTemplateMetaData(template_path)
+generator = SimpleExponentGenerator(metadata, multiple_choice = True)
+task_store = TaskStore(SimpleExponentGenerator.schema)
+generator.enumerate_task_plans(task_store)
+all_tasks = task_store.return_df().to_dict(orient='records')
+for i in range(0, 50):
+    random_task_plan = random.choice(all_tasks)
+    task = generator._generate_task(random_task_plan)
+    question, options, answer, _ = task
+    print()
+    print(question)
+    print("Answer: ", options)
