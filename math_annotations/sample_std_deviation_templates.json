@@ -1,0 +1,22 @@
+{
+    "template1": {
+        "text": "Given the data set {0}, calculate the sample standard deviation.",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "Find the sample standard deviation of the following numbers: {0}.",
+        "num_params": 1
+    },
+    "template3": {
+        "text": "What is the sample standard deviation of this data set: {0}?",
+        "num_params": 1
+    },
+    "template4": {
+        "text": "Calculate the sample standard deviation for the following set of values: {0}.",
+        "num_params": 1
+    },
+    "template5": {
+        "text": "Determine the sample standard deviation of these values: {0}.",
+        "num_params": 1
+    }
+}

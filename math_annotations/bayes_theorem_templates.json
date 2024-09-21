@@ -1,0 +1,6 @@
+{
+    "bayes_theorem_template": {
+        "text": "Given P(A) = {P_A}, P(B|A) = {P_B_given_A}, and P(B) = {P_B}, what is P(A|B)?",
+        "num_params": 3
+    }
+}

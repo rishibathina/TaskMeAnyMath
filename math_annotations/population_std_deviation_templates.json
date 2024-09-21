@@ -1,0 +1,22 @@
+{
+    "template1": {
+        "text": "Given the population data set {0}, calculate the population standard deviation.",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "Find the population standard deviation of the following values: {0}.",
+        "num_params": 1
+    },
+    "template3": {
+        "text": "What is the population standard deviation for this data set: {0}?",
+        "num_params": 1
+    },
+    "template4": {
+        "text": "Calculate the population standard deviation for the following values: {0}.",
+        "num_params": 1
+    },
+    "template5": {
+        "text": "Determine the population standard deviation of these values: {0}.",
+        "num_params": 1
+    }
+}

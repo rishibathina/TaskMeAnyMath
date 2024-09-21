@@ -1,0 +1,22 @@
+{
+    "template1": {
+        "text": "Given the true probability distribution {0} and predicted distribution {1}, calculate the cross-entropy.",
+        "num_params": 2
+    },
+    "template2": {
+        "text": "Find the cross-entropy between the true probabilities {0} and the predicted probabilities {1}.",
+        "num_params": 2
+    },
+    "template3": {
+        "text": "What is the cross-entropy for the true distribution {0} and predicted distribution {1}?",
+        "num_params": 2
+    },
+    "template4": {
+        "text": "Calculate the cross-entropy using the true distribution {0} and the predicted distribution {1}.",
+        "num_params": 2
+    },
+    "template5": {
+        "text": "Determine the cross-entropy for the given true probabilities {0} and predicted probabilities {1}.",
+        "num_params": 2
+    }
+}

@@ -1,11 +1,12 @@
 import random
 from geometry_task import AngleGenerator, AngleSumGenerator, ArcLengthGenerator, CircleGenerator, ConeVolumeGenerator, IntersectionGenerator, MathTemplateMetaData, MidpointGenerator, PerimeterGenerator, PointDistanceGenerator, PythagoreanTheoremGenerator, SideLengthGenerator, TaskStore, TriangleAreaGenerator, VolumeRectangularPrismGenerator, VolumeSphereGenerator
 from algebra_task import PointSlopeGenerator, QuadraticFormulaGenerator, RemainderTheoremGenerator, ExponentialDecayGenerator, PolynomialFactoringGenerator
+from stats_task import MeanMedianModeGenerator, BayesTheoremGenerator, SampleStdDeviationGenerator, PopulationStdDeviationGenerator, CrossEntropyGenerator
 import os
 
 
 def main():
-    templates = ["polynomial_factor_templates.json"]
+    templates = ["cross_entropy_templates.json"]
     mc = True
     for template in templates:
         template_path = "./math_annotations/" + template
@@ -65,6 +66,22 @@ def main():
         elif "polynomial" in template:
             generator = PolynomialFactoringGenerator(
                 metadata=metadata, multiple_choice=mc)
+        elif "mode" in template:
+            generator = MeanMedianModeGenerator(
+                metadata=metadata, multiple_choice=mc)
+        elif "bayes" in template:
+            generator = BayesTheoremGenerator(
+                metadata=metadata, multiple_choice=mc)
+        elif "sample" in template:
+            generator = SampleStdDeviationGenerator(
+                metadata=metadata, multiple_choice=mc)
+        elif "population" in template:
+            generator = PopulationStdDeviationGenerator(
+                metadata=metadata, multiple_choice=mc)
+        elif "cross" in template:
+            generator = CrossEntropyGenerator(
+                metadata=metadata, multiple_choice=mc)
+
     
         task_store = TaskStore(schema=generator.schema)
         generator.enumerate_task_plans(task_store)
