@@ -1,0 +1,14 @@
+{
+"template1": {
+    "text": "In how many ways can {n} items be arranged in {r} positions?",
+    "num_params": 2
+},
+"template2": {
+    "text": "In how many ways can {r} items be chosen from {n} items, regardless of order?",
+    "num_params": 2
+},
+"template3": {
+    "text": "How many ways can a committee of {r} members be selected from {n} people?",
+    "num_params": 2
+}
+}

@@ -1,0 +1,8 @@
+{
+    "template1": {
+        "text": "A sample of {n} items has a mean of {mean} and an error measure of {error_measure}. What is the {confidence_level}% confidence interval for the population mean?",
+        "num_params": 3
+    }
+}
+
+
