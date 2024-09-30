@@ -1,14 +1,14 @@
 from typing import Dict, List, Tuple
 import json
 import numpy as np
-from sympy import symbols, sqrt, exp, factor, expand
+import sympy
 
 from base import TaskGenerator
 from task_store import TaskStore
 from utils import *
 from metadata import MathTemplateMetaData
 
-class GeoPlanGenerator(TaskGenerator):
+class AlgPlanGenerator(TaskGenerator):
     metadata: MathTemplateMetaData
 
     def __init__(self, metadata: MathTemplateMetaData, seed=42):
@@ -36,7 +36,8 @@ class GeoPlanGenerator(TaskGenerator):
         }
         return task
 
-class PointSlopeGenerator(GeoPlanGenerator):
+
+class PointSlopeGenerator(AlgPlanGenerator):
     COORDINATE_RANGE = (-100, 100)
 
     schema = {
@@ -81,11 +82,8 @@ class PointSlopeGenerator(GeoPlanGenerator):
         y1 = round(float(task_plan['y1']), 2)
         x2 = round(float(task_plan['x2']), 2)
         y2 = round(float(task_plan['y2']), 2)
-
         slope = round((y2 - y1) / (x2 - x1)) if x2 != x1 else None
-
         question = template.format(x1=x1, y1=y1, x2=x2, y2=y2)
-   
         answer = str(slope) if slope is not None else "undefined"
         
         options = {}
@@ -108,8 +106,7 @@ class PointSlopeGenerator(GeoPlanGenerator):
         return question, deduped_options, answer, self.metadata
 
 
-
-class RemainderTheoremGenerator(GeoPlanGenerator):
+class RemainderTheoremGenerator(AlgPlanGenerator):
     COEFF_RANGE = (-5, 5)
 
     schema = {
@@ -130,7 +127,7 @@ class RemainderTheoremGenerator(GeoPlanGenerator):
 
         template_breakdown = self.metadata.templates_by_num_params
 
-        x = symbols('x')
+        x = sympy.symbols('x')
         for _, templates in template_breakdown.items():
             for template in templates:
                 for root in roots:
@@ -157,7 +154,7 @@ class RemainderTheoremGenerator(GeoPlanGenerator):
         polynomial_str = task_plan['polynomial']
         root = round(float(task_plan['root']), 2)
 
-        x = symbols('x')
+        x = sympy.symbols('x')
         polynomial = eval(polynomial_str)
         remainder = round(float(polynomial.subs(x, root)), 2)
         
@@ -178,8 +175,7 @@ class RemainderTheoremGenerator(GeoPlanGenerator):
         return question, deduped_options, answer, self.metadata
 
 
-
-class QuadraticFormulaGenerator(GeoPlanGenerator):
+class QuadraticFormulaGenerator(AlgPlanGenerator):
     COEFF_RANGE = (-10, 10)
 
     schema = {
@@ -225,8 +221,8 @@ class QuadraticFormulaGenerator(GeoPlanGenerator):
         c = round(float(task_plan['c']), 2)
 
         discriminant = b**2 - 4*a*c
-        x1 = (-b + sqrt(discriminant)) / (2*a) if discriminant >= 0 else None
-        x2 = (-b - sqrt(discriminant)) / (2*a) if discriminant >= 0 else None
+        x1 = (-b + sympy.sqrt(discriminant)) / (2*a) if discriminant >= 0 else None
+        x2 = (-b - sympy.sqrt(discriminant)) / (2*a) if discriminant >= 0 else None
 
         if x1 is not None and x2 is not None:
             x1 = round(float(x1), 2)
@@ -257,8 +253,7 @@ class QuadraticFormulaGenerator(GeoPlanGenerator):
         return question, deduped_options, answer, self.metadata
 
 
-
-class ExponentialDecayGenerator(GeoPlanGenerator):
+class ExponentialDecayGenerator(AlgPlanGenerator):
     PARAM_RANGE_N0 = (5, 20)   
     PARAM_RANGE_K = (0.01, 0.5)  
     TIME_RANGE = (0, 3)        
@@ -327,7 +322,7 @@ class ExponentialDecayGenerator(GeoPlanGenerator):
 
 
 
-class PolynomialFactoringGenerator(GeoPlanGenerator):
+class PolynomialFactoringGenerator(AlgPlanGenerator):
     COEFF_RANGE = (-10, 10)  
 
     schema = {
@@ -372,24 +367,365 @@ class PolynomialFactoringGenerator(GeoPlanGenerator):
         c = int(task_plan['c'])
         d = int(task_plan['d'])
 
-        x = symbols('x')
-        polynomial = expand((a * x + b) * (c * x + d))
+        x = sympy.symbols('x')
+        polynomial = sympy.expand((a * x + b) * (c * x + d))
         factored_form = f"({a}x + {b})({c}x + {d})"
-        
         question = template.format(a=a*c, b=a*d + b*c, c=b*d)
         answer = factored_form
         
         options = {}
         if self.multiple_choice:
             options["correct"] = answer
-            options["incorrect option 1"] = str(factor((a * x + (b + np.random.randint(-2, 3))) * (c * x + d)))
-            options["incorrect option 2"] = str(factor((a * x + b) * (c * x + (d + np.random.randint(-2, 3)))))
-            options["incorrect option 3"] = str(factor((a * x + (b + np.random.randint(-2, 3))) * (c * x + (d + np.random.randint(-2, 3)))))
-            
+            options["incorrect option 1"] = str(sympy.factor((a * x + (b + np.random.randint(-2, 3))) * (c * x + d)))
+            options["incorrect option 2"] = str(sympy.factor((a * x + b) * (c * x + (d + np.random.randint(-2, 3)))))
+            options["incorrect option 3"] = str(sympy.factor((a * x + (b + np.random.randint(-2, 3))) * (c * x + (d + np.random.randint(-2, 3)))))
             deduped_options = {k: v for i, (k, v) in enumerate(options.items()) if v not in list(options.values())[:i]}
         else:
             deduped_options = {}
 
         return question, deduped_options, answer, self.metadata
 
+class MatrixArithmeticGenerator(AlgPlanGenerator):
+    schema = {
+        'question_template': 'str',
+        'matrix_a': 'list',
+        'matrix_b': 'list',
+        'operation': 'str'
+    }
 
+    def __init__(self, metadata, seed=42, matrix_size=(2, 2), num_tasks=100, multiple_choice=False):
+        super().__init__(metadata, seed=seed)
+        self.num_tasks = num_tasks
+        self.all_tasks = set()
+        self.matrix_size = matrix_size
+        self.seed = seed
+        self.multiple_choice = multiple_choice
+
+    def _task_plan_to_str(self, task_plan):
+        return json.dumps(task_plan)
+
+    def generate_random_matrix(self):
+        return np.random.randint(1, 10, size=self.matrix_size).tolist()
+
+    def enumerate_task_plans(self, task_store):
+        np.random.seed(self.seed)
+        matrices = [self.generate_random_matrix() for _ in range(self.num_tasks)]
+        templates_by_num_params = self.metadata.templates_by_num_params
+        for num_params, templates in templates_by_num_params.items():
+            for template_text in templates:
+                for matrix_a in matrices:
+                    for matrix_b in matrices:
+                        if "add" in template_text or "Add" in template_text:
+                            task_plan = {
+                                'question_template': template_text,
+                                'matrix_a': matrix_a,
+                                'matrix_b': matrix_b,
+                                'operation': "addition"
+                            }
+                            task_store.add(task_plan)
+                        elif "subtract" in template_text or "subtraction" in template_text:
+                            task_plan = {
+                                'question_template': template_text,
+                                'matrix_a': matrix_a,
+                                'matrix_b': matrix_b,
+                                'operation': "subtraction"
+                            }
+                            task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan['question_template']
+        matrix_a = np.array(task_plan['matrix_a'])
+        matrix_b = np.array(task_plan['matrix_b'])
+        operation = task_plan["operation"]
+        question = ""
+        answer = ""
+        options = {}
+        if operation == "addition":
+            result = np.add(matrix_a, matrix_b)
+            question = task_plan['question_template'].format(matrix_a.tolist(), matrix_b.tolist())
+            answer = str(result.tolist())
+        else :
+            result = np.subtract(matrix_a, matrix_b)
+            question = task_plan['question_template'].format(matrix_a.tolist(), matrix_b.tolist())
+            answer = str(result.tolist())
+
+        if self.multiple_choice:
+            if operation == "addition":
+                options["incorrect option 1"] = str((matrix_a + matrix_b * 2).tolist())
+                options["incorrect option 2"] = str((matrix_a * 2 + matrix_b).tolist())
+                options["incorrect option 3"] = str((matrix_a - matrix_b).tolist())
+            elif operation == "subtraction":
+                options["incorrect option 1"] = str((matrix_a - matrix_b * 2).tolist())
+                options["incorrect option 2"] = str((matrix_a * 2 - matrix_b).tolist())
+                options["incorrect option 3"] = str((matrix_a + matrix_b).tolist())
+            deduped_options = {k: v for i, (k, v) in enumerate(options.items()) if v not in list(options.values())[:i]}
+            deduped_options["correct"] = answer
+        else:
+            deduped_options = {}
+        return question, deduped_options, answer, self.metadata
+
+
+class LinearEquationSystemGenerator(AlgPlanGenerator):
+    schema = {
+        'question_template': 'str',
+        'coefficients': 'list',
+        'constants': 'list'
+    }
+
+    def __init__(self, metadata, seed=42, num_equations=2, num_tasks=100, multiple_choice=False):
+        super().__init__(metadata, seed=seed)
+        self.num_tasks = num_tasks
+        self.num_equations = num_equations
+        self.seed = seed
+        self.multiple_choice = multiple_choice
+
+    def _task_plan_to_str(self, task_plan):
+        return json.dumps(task_plan)
+
+    def generate_random_linear_system(self):
+        coefficients = np.random.randint(1, 10, size=(self.num_equations, self.num_equations)).tolist()
+        constants = np.random.randint(1, 10, size=self.num_equations).tolist()
+        return coefficients, constants
+
+    def enumerate_task_plans(self, task_store):
+        np.random.seed(self.seed)
+        for _ in range(self.num_tasks):
+            coefficients, constants = self.generate_random_linear_system()
+            templates_by_num_params = self.metadata.templates_by_num_params
+            for num_params, templates in templates_by_num_params.items():
+                for template_text in templates:
+                    task_plan = {
+                        'question_template': template_text,
+                        'coefficients': coefficients,
+                        'constants': constants
+                    }
+                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan['question_template']
+        coefficients = np.array(task_plan['coefficients'])
+        constants = np.array(task_plan['constants'])
+        variables = sympy.symbols(f'x1:{self.num_equations + 1}')
+        equations = [sum(coefficients[i][j] * variables[j] for j in range(self.num_equations)) - constants[i]
+                     for i in range(self.num_equations)]
+        solution = sympy.linsolve(equations, *variables)
+        answer = ""
+        options = {}
+        question = template.format(coefficients.tolist(), constants.tolist())
+        if not solution:
+            answer = "No solution found"
+        else:
+            answer = str(solution)
+        if answer == "No solution found":
+            if self.multiple_choice:
+                options["incorrect option 1"] = "No solution exists"
+                options["incorrect option 2"] = "Infinite solutions"
+                options["incorrect option 3"] = "Dependent system"
+                deduped_options = options
+                deduped_options["correct"] = answer
+            else:
+                deduped_options = {}
+            return question, deduped_options, answer, self.metadata
+        solution = list(solution)[0]
+        if self.multiple_choice:
+            options["incorrect option 1"] = str(tuple(np.array(solution) + np.random.randint(3, 6, size=self.num_equations)))
+            while options["incorrect option 1"] == answer:
+                options["incorrect option 1"] = str(tuple(np.array(solution) + np.random.randint(3, 6, size=self.num_equations)))
+            options["incorrect option 2"] = str(tuple(np.array(solution) + np.random.randint(-4, -1, size=self.num_equations)))
+            while options["incorrect option 2"] == answer or options["incorrect option 2"] == options["incorrect option 1"]:
+                options["incorrect option 2"] = str(tuple(np.array(solution) + np.random.randint(-4, -1, size=self.num_equations)))
+            options["incorrect option 3"] = str(tuple(np.array(solution) + np.random.randint(1, 3, size=self.num_equations)))
+            while options["incorrect option 3"] == answer or options["incorrect option 3"] == options["incorrect option 1"] or options["incorrect option 3"] == options["incorrect option 2"]:
+                options["incorrect option 3"] = str(tuple(np.array(solution) + np.random.randint(1, 3, size=self.num_equations)))
+            
+            deduped_options = options
+            deduped_options["correct"] = answer
+        else:
+            deduped_options = {}
+
+        return question, deduped_options, answer, self.metadata
+
+
+class BasicArithmeticOperationsGenerator(AlgPlanGenerator):
+    schema = {
+        'question_template': 'str',
+        'operands': 'list',
+        'operation': 'str'
+    }
+
+    def __init__(self, metadata, seed=42, num_tasks=100, multiple_choice=False):
+        super().__init__(metadata, seed=seed)
+        self.num_tasks = num_tasks
+        self.seed = seed
+        self.multiple_choice = multiple_choice
+
+    def _task_plan_to_str(self, task_plan):
+        return json.dumps(task_plan)
+
+    def enumerate_task_plans(self, task_store, operand_range=(1, 100)):
+        np.random.seed(self.seed)
+        templates_by_num_params = self.metadata.templates_by_num_params
+        for _ in range(self.num_tasks):
+            integer_1 = np.random.randint(*operand_range)
+            integer_2 = np.random.randint(*operand_range)
+            for num_params, templates in templates_by_num_params.items():
+                for template_text in templates:
+                    operation = ""
+                    if "+" in template_text or "add" in template_text:
+                        operation = "addition"
+                    elif "subtract" in template_text or "-" in template_text:
+                        operation = "subtraction"
+                    elif "product" in template_text:
+                        operation = "multiplication"
+                    elif "divided" in template_text or "/" in template_text:
+                        operation = "division"
+                    task_plan = {
+                        'question_template': template_text,
+                        'operands': [integer_1, integer_2],
+                        'operation': operation
+                    }
+                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan['question_template']
+        integer_1, integer_2 = task_plan['operands']
+        operation = task_plan['operation']
+        answer = ""
+        options = {}
+        if operation == "addition":
+            result = integer_1 + integer_2
+            answer = str(result)
+        elif operation == "subtraction":
+            result = integer_1 - integer_2
+            answer = str(result)
+        elif operation == "multiplication":
+            result = integer_1 * integer_2
+            answer = str(result)
+        elif operation == "division":
+            if integer_2 == 0:
+                answer = "undefined"
+            else:
+                result = integer_1 / integer_2
+                answer = f"{result:.2f}"
+        question = template.format(integer_1, integer_2)
+        if self.multiple_choice:
+            options["incorrect option 1"] = str(integer_1)
+            options["incorrect option 3"] = str(integer_2 - integer_1)
+            if answer != "undefined":
+                options["incorrect option 2"] = str(round(integer_1 / integer_2, 2))
+            else:
+                options["incorrect option 2"] = str(integer_2)
+            deduped_options = {k: v for i, (k, v) in enumerate(options.items()) if v not in list(options.values())[:i]}
+            deduped_options["correct"] = answer
+        else:
+            deduped_options = {}
+        return question, deduped_options, answer, self.metadata
+
+
+class RatioTaskGenerator(AlgPlanGenerator):
+    schema = {
+        'question_template': 'str',
+        'ratio1': 'int',
+        'ratio2': 'int',
+        'base_quantity': 'int'
+    }
+
+    def __init__(self, metadata, seed=42, num_tasks=100, multiple_choice=False):
+        super().__init__(metadata, seed=seed)
+        self.num_tasks = num_tasks
+        self.seed = seed
+        self.multiple_choice = multiple_choice
+
+    def _task_plan_to_str(self, task_plan):
+        return json.dumps(task_plan)
+
+    def enumerate_task_plans(self, task_store):
+        np.random.seed(self.seed)
+        templates_by_num_params = self.metadata.templates_by_num_params
+        for _ in range(self.num_tasks):
+            ratio1 = np.random.randint(1, 10)
+            ratio2 = np.random.randint(1, 10)
+            base_quantity = np.random.randint(5, 50)
+            for num_params, templates in templates_by_num_params.items():
+                for template_text in templates:
+                    task_plan = {
+                        'question_template': template_text,
+                        'ratio1': ratio1,
+                        'ratio2': ratio2,
+                        'base_quantity': base_quantity
+                    }
+                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan['question_template']
+        ratio1 = task_plan['ratio1']
+        ratio2 = task_plan['ratio2']
+        base_quantity = task_plan['base_quantity']
+
+        calculated_value = base_quantity * (ratio2 / ratio1)
+        question = template.format(ratio1, ratio2, base_quantity)
+        answer = f"{calculated_value:.2f}"  # Format to two decimal places
+
+        options = {}
+        if self.multiple_choice:
+            options["incorrect option 1"] = str(float(answer) + 1)
+            options["incorrect option 2"] = str(float(answer) - 1)
+            options["incorrect option 3"] = str(float(answer) * 2)
+            deduped_options = {k: v for i, (k, v) in enumerate(options.items()) if v not in list(options.values())[:i]}
+            deduped_options["correct"] = answer
+        else:
+            deduped_options = {}
+        return question, deduped_options, answer, self.metadata
+
+
+class SimpleExponentGenerator(AlgPlanGenerator):
+    schema = {
+        'question_template': 'str',
+        'base': 'str',
+        'exponent': 'str'
+    }
+
+    def __init__(self, metadata, seed=42, num_tasks=100, multiple_choice=False):
+        super().__init__(metadata, seed=seed)
+        self.seed = seed
+        self.num_tasks = num_tasks
+        self.multiple_choice = multiple_choice
+        np.random.seed(seed)
+
+    def _task_plan_to_str(self, task_plan):
+        return json.dumps(task_plan)
+
+    def enumerate_task_plans(self, task_store):
+        np.random.seed(self.seed)
+        templates_by_num_params = self.metadata.templates_by_num_params
+        for _ in range(self.num_tasks):
+            base = np.random.randint(2, 10)
+            exponent = np.random.randint(2, 6)
+            for num_params, templates in templates_by_num_params.items():
+                for template_text in templates:
+                    task_plan = {
+                        'question_template': template_text,
+                        'base': base,
+                        'exponent': exponent
+                    }
+                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan['question_template']
+        base = task_plan['base']
+        exponent = task_plan['exponent']
+        calculated_value = float(base) ** float(exponent)
+        question = template.format(base, exponent)
+        answer = str(calculated_value)
+
+        options = {}
+        if self.multiple_choice:
+            options["incorrect option 1"] = str(float(base) ** (float(exponent) + 1))
+            options["incorrect option 2"] = str(float(base) ** (float(exponent) - 1))
+            options["incorrect option 3"] = "0"
+            deduped_options = {k: v for i, (k, v) in enumerate(options.items()) if v not in list(options.values())[:i]}
+            deduped_options["correct"] = answer
+        else:
+            deduped_options = {}
+
+        return question, deduped_options, answer, self.metadata

@@ -37,7 +37,7 @@ class GeoPlanGenerator(TaskGenerator):
         return task
 
 
-class PerimeterGenerator(GeoPlanGenerator):
+class TrianglePerimeterGenerator(GeoPlanGenerator):
     schema = {
         "question_template": "str",
         "side_one": "str",
@@ -136,10 +136,14 @@ class PerimeterGenerator(GeoPlanGenerator):
                 option3 = str(round(side_one + 2 * side_two, 2))
                 option4 = str(round(side_one * side_two / 2, 2))
                 all_options = [option2, option3, option4]
-                  
-        deduped_options = [opt for opt in dict.fromkeys(all_options) if opt != answer]
-        deduped_options_dict = {f"incorrect option {i+1}": opt for i, opt in enumerate(dict.fromkeys(deduped_options))}
-        deduped_options_dict["correct"] = answer
+        
+        if self.multiple_choice:          
+            deduped_options = [opt for opt in dict.fromkeys(all_options) if opt != answer]
+            deduped_options_dict = {f"incorrect option {i+1}": opt for i, opt in enumerate(dict.fromkeys(deduped_options))}
+            deduped_options_dict["correct"] = answer
+        else:
+            deduped_options_dict = {}
+            
         return question, deduped_options_dict, answer, self.metadata
 
 
@@ -397,7 +401,7 @@ class PerpendicularGenerator(GeoPlanGenerator):
         return question, answer, self.metadata
 
 
-class SideLengthGenerator(GeoPlanGenerator):
+class SquareSideLengthGenerator(GeoPlanGenerator):
     AREA_RANGE = (1, 1000)
 
     schema = {"question_template": "str", "area": "str"}
@@ -499,12 +503,10 @@ class ArcLengthGenerator(GeoPlanGenerator):
         answer = str(arc_length)
 
         if self.multiple_choice:
-            option1 = str(round(2 * np.pi * radius * (angle / 360), 2))
             option2 = str(round(np.pi * radius * angle / 360, 2))
             option3 = str(round(np.pi * radius**2 * angle / 180, 2))
             option4 = str(round(np.pi * angle / 180, 2))
-
-            all_options = [option1, option2, option3, option4]
+            all_options = [option2, option3, option4]
             deduped_options = {f"incorrect option {i+1}": opt for i, opt in enumerate(dict.fromkeys(all_options))}
             deduped_options["correct"] = answer
         else:
@@ -738,7 +740,7 @@ class AngleSumGenerator(GeoPlanGenerator):
         return question, deduped_options, answer, self.metadata
 
 
-class VolumeRectangularPrismGenerator(GeoPlanGenerator):
+class RectangularPrismVolumeGenerator(GeoPlanGenerator):
     schema = {
         "question_template": "str",
         "length": "str",
@@ -873,7 +875,7 @@ class AngleGenerator(GeoPlanGenerator):
         return question, deduped_options, answer, self.metadata
 
 
-class VolumeSphereGenerator(GeoPlanGenerator):
+class SphereVolumeGenerator(GeoPlanGenerator):
     schema = {"question_template": "str", "radius": "str"}
 
     def __init__(
