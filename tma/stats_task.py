@@ -45,63 +45,130 @@ class GeoPlanGenerator(TaskGenerator):
         }
         return task
 
-
-class MeanMedianModeGenerator(GeoPlanGenerator):
-    RANGE = (1, 10)  
-    LIST_LENGTH = (5, 10) 
+class MeanGenerator(GeoPlanGenerator):
+    RANGE = (1, 10)
+    LIST_LENGTH = (5, 10)
 
     schema = {
         'question_template': 'str',
         'numbers': 'str'
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, num_splices=3):
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42):
         super().__init__(metadata, seed=seed)
         self.multiple_choice = multiple_choice
 
     def enumerate_task_plans(self, task_store: TaskStore):
-        template_breakdown = self.metadata.templates_by_num_params
+        templates = self.metadata.templates
 
-        for _, templates in template_breakdown.items():
-            for template in templates:
-                for _ in range(100): 
-                    numbers = np.random.randint(self.RANGE[0], self.RANGE[1], np.random.randint(self.LIST_LENGTH[0], self.LIST_LENGTH[1]))
-                    task_plan = {
-                        'question_template': template,
-                        'numbers': str(list(numbers))
-                    }
-                    task_store.add(task_plan)
+        for template in templates:
+            for _ in range(100):
+                numbers = np.random.randint(
+                    self.RANGE[0],
+                    self.RANGE[1],
+                    np.random.randint(self.LIST_LENGTH[0], self.LIST_LENGTH[1])
+                )
+                task_plan = {
+                    'question_template': template,
+                    'numbers': str(list(numbers))
+                }
+                task_store.add(task_plan)
 
-    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, float], float, Dict]:
         template = task_plan['question_template']
         numbers = eval(task_plan['numbers'])
 
         mean_value = np.mean(numbers)
-        median_value = np.median(numbers)
-        mode_value = scipy.stats.mode(numbers)[0][0]
 
         question = template.format(numbers=numbers)
-        
-        answer = {
-            'mean': mean_value,
-            'median': median_value,
-            'mode': mode_value
-        }
+        answer = mean_value
 
         options = {}
         if self.multiple_choice:
-            options["correct"] = answer
-            options["incorrect option 1"] = {'mean': mean_value + np.random.randint(-5, 5), 
-                                              'median': median_value + np.random.randint(-5, 5),
-                                              'mode': mode_value + np.random.randint(-5, 5)}
-            options["incorrect option 2"] = {'mean': mean_value + np.random.randint(-10, 10), 
-                                              'median': median_value + np.random.randint(-10, 10),
-                                              'mode': mode_value + np.random.randint(-10, 10)}
-            options["incorrect option 3"] = {'mean': mean_value + np.random.randint(-15, 15), 
-                                              'median': median_value + np.random.randint(-15, 15),
-                                              'mode': mode_value + np.random.randint(-15, 15)}
+            options["correct"] = round(mean_value, 2)
+            options["incorrect_option_1"] = round(mean_value + np.random.uniform(-3, 3), 2)
+            options["incorrect_option_2"] = round(mean_value + np.random.uniform(-5, 5), 2)
+            options["incorrect_option_3"] = round(mean_value + np.random.uniform(-7, 7), 2)
 
         return question, options, answer, self.metadata
+
+
+class MedianGenerator(GeoPlanGenerator):
+    RANGE = (1, 10)
+    LIST_LENGTH = (5, 10)
+
+    def __init__(self, metadata: MathTemplateMetaData, template_data, multiple_choice=True, seed=42):
+        super().__init__(metadata, seed=seed)
+        self.multiple_choice = multiple_choice
+        self.template = template_data['median_template']['text']
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        for _ in range(100):
+            numbers = np.random.randint(
+                self.RANGE[0],
+                self.RANGE[1],
+                np.random.randint(self.LIST_LENGTH[0], self.LIST_LENGTH[1])
+            )
+            task_plan = {
+                'numbers': str(sorted(numbers))
+            }
+            task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, float], float, Dict]:
+        numbers = eval(task_plan['numbers'])
+        median_value = np.median(numbers)
+
+        question = self.template.format(numbers=numbers)
+        answer = median_value
+
+        options = {}
+        if self.multiple_choice:
+            options["correct"] = median_value
+            options["incorrect_option_1"] = median_value + np.random.choice([-2, -1, 1, 2])
+            options["incorrect_option_2"] = median_value + np.random.choice([-3, -2, 2, 3])
+            options["incorrect_option_3"] = median_value + np.random.choice([-4, -3, 3, 4])
+
+        return question, options, answer, self.metadata
+
+
+class ModeGenerator(GeoPlanGenerator):
+    RANGE = (1, 10)
+    LIST_LENGTH = (5, 10)
+
+    def __init__(self, metadata: MathTemplateMetaData, template_data, multiple_choice=True, seed=42):
+        super().__init__(metadata, seed=seed)
+        self.multiple_choice = multiple_choice
+        self.template = template_data['mode_template']['text']
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        for _ in range(100):
+            numbers = np.random.randint(
+                self.RANGE[0],
+                self.RANGE[1],
+                np.random.randint(self.LIST_LENGTH[0], self.LIST_LENGTH[1])
+            )
+            task_plan = {
+                'numbers': str(list(numbers))
+            }
+            task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, int], int, Dict]:
+        numbers = eval(task_plan['numbers'])
+        mode_result = scipy.stats.mode(numbers)
+        mode_value = mode_result.mode[0]
+
+        question = self.template.format(numbers=numbers)
+        answer = mode_value
+
+        options = {}
+        if self.multiple_choice:
+            options["correct"] = mode_value
+            options["incorrect_option_1"] = mode_value + np.random.choice([-2, -1, 1, 2])
+            options["incorrect_option_2"] = mode_value + np.random.choice([-3, -2, 2, 3])
+            options["incorrect_option_3"] = mode_value + np.random.choice([-4, -3, 3, 4])
+
+        return question, options, answer, self.metadata
+
 
 
 class BayesTheoremGenerator(GeoPlanGenerator):

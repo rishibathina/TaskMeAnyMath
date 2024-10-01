@@ -1,0 +1,6 @@
+{
+    "median_template": {
+        "text": "What is the median of the following numbers: {numbers}?",
+        "num_params": 1
+    }
+}
