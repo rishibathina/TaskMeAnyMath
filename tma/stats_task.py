@@ -725,17 +725,3 @@ class ExpectedValueGenerator(GeoPlanGenerator):
             deduped_options = {}
 
         return question, deduped_options, str(np.round(expected_value, 2)), self.metadata
-
-template_path = 'math_annotations/expect_value_templates.json'
-metadata = MathTemplateMetaData(template_path)
-generator = ExpectedValueGenerator(metadata, multiple_choice = True)
-task_store = TaskStore(ExpectedValueGenerator.schema)
-generator.enumerate_task_plans(task_store)
-all_tasks = task_store.return_df().to_dict(orient='records')
-for i in range(0, 50):
-    random_task_plan = random.choice(all_tasks)
-    task = generator._generate_task(random_task_plan)
-    question, options, answer, _ = task
-    print()
-    print(question)
-    print("Answer: ", options)
