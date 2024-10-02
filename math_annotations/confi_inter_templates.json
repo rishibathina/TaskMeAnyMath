@@ -1,0 +1,10 @@
+{
+    "template1": {
+        "text": "A sample of {n} items has a mean of {mean} and an error measure of {error_measure}. What is the {confidence_level}% confidence interval for the population mean?",
+        "num_params": 3
+    },
+    "template2": {
+        "text": "A dataset of {n} observations has an average value of {mean} and a standard deviation of {error_measure}. Determine the {confidence_level}% confidence range for the true population mean.",
+        "num_params": 3
+    }
+}
