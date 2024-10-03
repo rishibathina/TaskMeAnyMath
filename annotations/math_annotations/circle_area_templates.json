@@ -1,0 +1,11 @@
+{
+    "template1": {
+        "text": "Given that the radius of the circle is {param1}, calculate the area of the circle",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "What is the area of a circle with radius {param1}?",
+        "num_params": 1
+    }
+
+}
