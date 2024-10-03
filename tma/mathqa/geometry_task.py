@@ -896,7 +896,7 @@ class VolumeSphereGenerator(GeoPlanGenerator):
         return question, answer, options, self.metadata
 
 
-class ConeVolumeGenerator:
+class ConeVolumeGenerator(GeoPlanGenerator):
     schema = {
         'question_template': 'str',
         'radius': 'str',
@@ -1261,3 +1261,4 @@ class QuadraticFormulaGenerator(GeoPlanGenerator):
             incorrect1 = str(np.random.choice(solutions))  # One root only
             options.extend([incorrect1])
         return question, options, answer, self.metadata
+
