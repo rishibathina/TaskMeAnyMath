@@ -1,0 +1,10 @@
+{
+    "template1": {
+        "text": "A game offers a prize of {value1} dollars with probability {prob1}, and a prize of {value2} dollars with probability {prob2}. What is the expected value of playing the game?",
+        "num_params": 4
+    },
+    "template2": {
+        "text": "You are given two outcomes: outcome 1 with a value of {value1} occurring with probability {prob1}, and outcome 2 with a value of {value2} occurring with probability {prob2}. What is the expected value of the outcomes?",
+        "num_params": 4
+    }
+}
