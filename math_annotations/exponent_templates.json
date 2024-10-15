@@ -1,0 +1,18 @@
+{
+    "template1": {
+        "text": "What is the value of {0}^{1}?",
+        "num_params": 2
+    },
+    "template2": {
+        "text": "Calculate {0}^{1}.",
+        "num_params": 2
+    },
+    "template3": {
+        "text": "Determine the power: {0}^{1}.",
+        "num_params": 2
+    },
+    "template4": {
+        "text": "Evaluate the expression {0} raised to the power of {1}.",
+        "num_params": 2
+    }
+}
