@@ -1,0 +1,18 @@
+{
+    "template1": {
+        "text": "What is the result of {0} + {1}?",
+        "num_params": 2
+    },
+    "template2": {
+        "text": "What do you get when you subtract {1} from {0}?",
+        "num_params": 2
+    },
+    "template3": {
+        "text": "Calculate the product of {0} and {1}.",
+        "num_params": 2
+    },
+    "template4": {
+        "text": "What is {0} divided by {1}? If the answer is undefined, output 'undefined'.",
+        "num_params": 2
+    }
+}
