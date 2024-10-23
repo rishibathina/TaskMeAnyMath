@@ -1,0 +1,14 @@
+{
+    "template1": {
+        "text": "If the probability of event A is {prob_b} and the probability of both events A and B is {prob_a_and_b}, what is the probability of A given B?",
+        "num_params": 2
+    },
+    "template2": {
+        "text": "The probability of a randomly selected item being defective is {prob_b}, and the probability of selecting a defective and large item is {prob_a_and_b}. What is the probability of the item being defective given that it's large?",
+        "num_params": 2
+    },
+    "template3": {
+        "text": "If the probability of drawing a red card is {prob_b}, and the probability of drawing a red and face card is {prob_a_and_b}, what is the probability of drawing a red card given that it's a face card?",
+        "num_params": 2
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "template1": {
+        "text": "Solve the following system of linear equations:\n{0}[x1, x2] = {1}\n",
+        "num_params": 2
+    },
+    "template2": {
+        "text": "Find the values of x1 and x2 that satisfy these equations:\n{0}[x1, x2] = {1}\n",
+        "num_params": 2
+    },
+    "template3": {
+        "text": "Given the system of equations:\n{0}[x1, x2] = {1}\nDetermine the solution for x1 and x2.",
+        "num_params": 2
+    },
+    "template4": {
+        "text": "What is the solution to this system of equations?\n{0}[x1, x2] = {1}",
+        "num_params": 2
+    },
+    "template5": {
+        "text": "Solve for x1 and x2 in the following system:\n{0}[x1, x2] = {1}",
+        "num_params": 2
+    }
+}

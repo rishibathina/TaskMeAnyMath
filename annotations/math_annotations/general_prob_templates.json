@@ -1,0 +1,14 @@
+{
+    "template1": {
+        "text": "What is the probability of selecting a specific person from a team of {0} people, each with a unique number?",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "What is the probability of drawing a specific card from a standard deck of {0} cards?",
+        "num_params": 1
+    },
+    "template3": {
+        "text": "If there are {0} items in a bag, numbered from 1 to {0}, what is the probability of selecting a specific item?",
+        "num_params": 1
+    }
+}

@@ -481,117 +481,109 @@ class ArcLengthGenerator(GeoPlanGenerator):
 
 
 
-class CircleGenerator(GeoPlanGenerator):
+class CircleAreaGenerator(GeoPlanGenerator):
     schema = {
-        'question_template': 'str',
-        'radius': 'str',          # Store float as string
-        'circumference': 'str',   # Store float as string
-        'area': 'str'
+        "question_template": "str",
+        "radius": "str",
+        "area": "str",
     }
 
-    def __init__(self, metadata: MathTemplateMetaData, seed=42, num_tasks=100, multiple_choice=False):
+    def __init__(
+        self,
+        metadata: MathTemplateMetaData,
+        seed=42,
+        num_tasks=100,
+        multiple_choice=False,
+    ):
         super().__init__(metadata, seed=seed)
         self.num_tasks = num_tasks
         self.all_tasks = set()
         self.multiple_choice = multiple_choice
 
-    def _task_plan_to_str(self, task_plan) -> str:
-        return json.dumps(task_plan)
+    def enumerate_task_plans(self, task_store: TaskStore):
+        all_radii = np.linspace(1, 100, self.num_tasks)
+        template_breakdown = self.metadata.templates_by_num_params
+        for _, texts in template_breakdown.items():
+            for text in texts:
+                for radius in all_radii:
+                    area = np.pi * radius**2
+                    task_plan = {
+                        "question_template": text,
+                        "radius": str(radius),
+                        "area": str(area),
+                    }
+                    task_store.add(task_plan)
+                    self.all_tasks.add((radius, area))
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan["question_template"]
+        radius = round(float(task_plan["radius"]), 2)
+        area = round(float(task_plan["area"]), 2)
+        options = {}
+        question = template.format(param1=radius)
+        answer = str(area)
+
+        if self.multiple_choice:
+            option1 = str(round(np.pi * radius, 2))  # Incorrect options
+            option2 = str(round(np.pi * radius**3, 2))
+            option3 = str(round(2 * np.pi * radius, 2))
+            options = {f"incorrect option {i+1}": opt for i, opt in enumerate([option1, option2, option3])}
+            options["correct"] = answer
+
+        return question, options, answer, self.metadata
+
+
+class CirclePerimeterGenerator(GeoPlanGenerator):
+    schema = {
+        "question_template": "str",
+        "radius": "str",
+        "circumference": "str",
+    }
+
+    def __init__(
+        self,
+        metadata: MathTemplateMetaData,
+        seed=42,
+        num_tasks=100,
+        multiple_choice=False,
+    ):
+        super().__init__(metadata, seed=seed)
+        self.num_tasks = num_tasks
+        self.all_tasks = set()
+        self.multiple_choice = multiple_choice
 
     def enumerate_task_plans(self, task_store: TaskStore):
-        all_values = np.linspace(1, 100, self.num_tasks)  # general range for any circle property
+        all_radii = np.linspace(1, 100, self.num_tasks)
         template_breakdown = self.metadata.templates_by_num_params
-        for num_params, texts in template_breakdown.items():
+        for _, texts in template_breakdown.items():
             for text in texts:
-                for value in tqdm(all_values, desc=f"Enumerating templates with {num_params} params"):
-                    if 'circumference' in text or 'perimeter' in text:
-                        radius = value / (2 * np.pi)
-                        circumference = value
-                        area = np.pi * radius ** 2
-                    elif 'area' in text:
-                        radius = np.sqrt(value / np.pi)
-                        circumference = 2 * np.pi * radius
-                        area = value
-                    else:  # default to radius if not specified
-                        radius = value
-                        circumference = 2 * np.pi * radius
-                        area = np.pi * radius ** 2
-                    
-                    result = (radius, circumference, area)
-                    if result not in self.all_tasks:
-                        task_plan = {
-                            'question_template': text,
-                            'radius': str(radius),
-                            'circumference': str(circumference),
-                            'area': str(area)
-                        }
-                        task_store.add(task_plan)
-                        self.all_tasks.add(result)
+                for radius in all_radii:
+                    circumference = 2 * np.pi * radius
+                    task_plan = {
+                        "question_template": text,
+                        "radius": str(radius),
+                        "circumference": str(circumference),
+                    }
+                    task_store.add(task_plan)
+                    self.all_tasks.add((radius, circumference))
 
-    def _generate_task(self, task_plan) -> Tuple[str, str, Dict]:
-        answer = None
-        question = None
-        template = task_plan['question_template']
-        radius = float(task_plan['radius'])
-        circumference = float(task_plan['circumference'])
-        area = float(task_plan['area'])
-        options = []
-        
-        if 'circumference' in template or 'perimeter' in template:
-            if 'radius' in template:
-                question = template.format(param1=radius)
-                # in this case, we are looking for circumference, known radius
-                # the correct formula would be circumference = 2 * np.pi * radius
-                answer = circumference
-                if self.multiple_choice:
-                    option1 = np.pi * radius  # forget the 2
-                    option2 = 0.5 * np.pi * radius
-                    option3 = np.pi * radius ** 2  # think it's area calculation
-                    options.append(option1)
-                    options.append(option2)
-                    options.append(option3)
-            else:
-                question = template.format(param1=circumference)
-                answer = radius
-                # in this case, we know circumference and try to know the radius
-                # correct formula to calculate radius would be circumference/ (2 * np.pi)
-                if self.multiple_choice:
-                    option1 =  circumference/ (np.pi)
-                    option2 =  circumference/ (0.5 * np.pi)
-                    option3 =  np.sqrt(circumference / np.pi)
-                    options.append(option1)
-                    options.append(option2)
-                    options.append(option3) 
-        elif 'area' in template:
-            if 'radius' in template:
-                question = template.format(param1=radius)
-                answer = area
-                # known radius, calculate area
-                # the correct formula would be np.pi * radius ** 2
-                if self.multiple_choice:
-                    option1 = np.pi * radius
-                    option2 = np.pi * radius ** 3
-                    option3 = 2 * np.pi * radius
-                    options.append(option1)
-                    options.append(option2)
-                    options.append(option3)
-            else:
-                question = template.format(param1=area)
-                answer = radius
-                # known area, calculate the radius
-                # correct formula here is np.sqrt(area / np.pi)
-                if self.multiple_choice:
-                    option1 = area / np.pi
-                    option2 = 2 * np.sqrt(area / np.pi)
-                    option3 = area/ (2 * np.pi)
-                    options.append(option1)
-                    options.append(option2)
-                    options.append(option3)
-        else:
-            raise ValueError("Template must specify either perimeter, area, or radius.")
-        np.random.shuffle(options)
-        return question, str(answer), options, self.metadata
-    
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan["question_template"]
+        radius = round(float(task_plan["radius"]), 2)
+        circumference = round(float(task_plan["circumference"]), 2)
+        options = {}
+
+        question = template.format(param1=radius)
+        answer = str(circumference)
+
+        if self.multiple_choice:
+            option1 = str(round(np.pi * radius, 2))  # Forgetting the 2
+            option2 = str(round(0.5 * np.pi * radius, 2))
+            option3 = str(round(np.pi * radius**2, 2))  # Mistaking it for area
+            options = {f"incorrect option {i+1}": opt for i, opt in enumerate([option1, option2, option3])}
+            options["correct"] = answer
+
+        return question, options, answer, self.metadata
 
 class TriangleAreaGenerator(GeoPlanGenerator):
     schema = {
@@ -904,7 +896,7 @@ class VolumeSphereGenerator(GeoPlanGenerator):
         return question, answer, options, self.metadata
 
 
-class ConeVolumeGenerator:
+class ConeVolumeGenerator(GeoPlanGenerator):
     schema = {
         'question_template': 'str',
         'radius': 'str',
@@ -1268,8 +1260,6 @@ class QuadraticFormulaGenerator(GeoPlanGenerator):
             options.append(' & '.join(incorrect_plus_b))
             incorrect1 = str(np.random.choice(solutions))  # One root only
             options.extend([incorrect1])
-            
-        
         return question, options, answer, self.metadata
 
 
