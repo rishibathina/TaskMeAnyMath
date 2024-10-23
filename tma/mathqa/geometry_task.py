@@ -1272,3 +1272,281 @@ class QuadraticFormulaGenerator(GeoPlanGenerator):
         
         return question, options, answer, self.metadata
 
+
+class AreaRadiusGenerator(GeoPlanGenerator):
+    AREA_RANGE = (50, 500)
+
+    schema = {
+        'question_template': 'str',
+        'area': 'str',
+        'radius': 'str'
+    }
+
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, area_range=AREA_RANGE, num_splices=10):
+        super().__init__(metadata, seed=seed)
+        self.area_range = area_range
+        self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        areas = np.linspace(self.area_range[0], self.area_range[1], self.num_splices)
+
+        template_breakdown = self.metadata.templates_by_num_params
+
+        for param_count, templates in template_breakdown.items():
+            for template in tqdm(templates, desc="Enumerating templates for Area-to-Radius tasks"):
+                for area in areas:
+                    radius = (area / np.pi) ** 0.5  # Calculate radius from area
+                    task_plan = {
+                        'question_template': template,
+                        'area': str(area),
+                        'radius': str(radius)
+                    }
+                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
+        template = task_plan['question_template']
+        area = float(task_plan['area'])
+        radius = float(task_plan['radius'])
+
+        question = template.format(area=area)
+        answer = str(radius)
+        
+        options = []
+        if self.multiple_choice:
+            options.append(str(radius))
+            options.append(str(radius + np.random.uniform(-5, 5)))  # Add some distractors
+            options.append("0")  # Incorrect common answer
+            options.append(str(radius - np.random.uniform(-5, 5)))
+
+        return question, options, answer, self.metadata
+
+
+class VolumeSideCubeGenerator(GeoPlanGenerator):
+    VOLUME_RANGE = (125, 1000)
+
+    schema = {
+        'question_template': 'str',
+        'volume': 'str',
+        'side_length': 'str'
+    }
+
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, volume_range=VOLUME_RANGE, num_splices=10):
+        super().__init__(metadata, seed=seed)
+        self.volume_range = volume_range
+        self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        volumes = np.linspace(self.volume_range[0], self.volume_range[1], self.num_splices)
+
+        template_breakdown = self.metadata.templates_by_num_params
+
+        for param_count, templates in template_breakdown.items():
+            for template in tqdm(templates, desc="Enumerating templates for Volume-to-Side tasks"):
+                for volume in volumes:
+                    side_length = volume ** (1/3)  # Calculate side length from volume
+                    task_plan = {
+                        'question_template': template,
+                        'volume': str(volume),
+                        'side_length': str(side_length)
+                    }
+                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
+        template = task_plan['question_template']
+        volume = float(task_plan['volume'])
+        side_length = float(task_plan['side_length'])
+
+        question = template.format(volume=volume)
+        answer = str(side_length)
+        
+        options = []
+        if self.multiple_choice:
+            options.append(str(side_length))
+            options.append(str(side_length + np.random.uniform(-1, 1)))
+            options.append(str(volume / 3))  # Common incorrect answer
+            options.append(str(side_length - np.random.uniform(-1, 1)))
+
+        return question, options, answer, self.metadata
+
+
+class AngleToSidePythagoreanTheoremGenerator(GeoPlanGenerator):
+    SIDE_RANGE = (3, 15)
+
+    schema = {
+        'question_template': 'str',
+        'side_a': 'str',
+        'side_b': 'str',
+        'side_c': 'str'
+    }
+
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, side_range=SIDE_RANGE, num_splices=10):
+        super().__init__(metadata, seed=seed)
+        self.side_range = side_range
+        self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        side_a_values = np.linspace(self.side_range[0], self.side_range[1], self.num_splices)
+        side_b_values = np.linspace(self.side_range[0], self.side_range[1], self.num_splices)
+
+        template_breakdown = self.metadata.templates_by_num_params
+
+        for param_count, templates in template_breakdown.items():
+            for template in tqdm(templates, desc="Enumerating templates for Pythagorean Theorem tasks"):
+                for a in side_a_values:
+                    for b in side_b_values:
+                        c = (a**2 + b**2) ** 0.5  # Calculate hypotenuse using Pythagorean theorem
+                        task_plan = {
+                            'question_template': template,
+                            'side_a': str(a),
+                            'side_b': str(b),
+                            'side_c': str(c)
+                        }
+                        task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
+        template = task_plan['question_template']
+        side_a = float(task_plan['side_a'])
+        side_b = float(task_plan['side_b'])
+        side_c = float(task_plan['side_c'])
+
+        question = template.format(side_a=side_a, side_b=side_b)
+        answer = str(side_c)
+        
+        options = []
+        if self.multiple_choice:
+            options.append(str(side_c))
+            options.append(str(side_c + np.random.uniform(-1, 1)))
+            options.append(str((side_a + side_b) / 2))  # Common incorrect answer
+            options.append(str(side_c - np.random.uniform(-1, 1)))
+
+        return question, options, answer, self.metadata
+
+
+
+class AngleTrigonometryGenerator(GeoPlanGenerator):
+    SIDE_RANGE = (10, 50)  # Length of triangle sides
+    ANGLE_RANGE = (30, 150)  # Angle range for generating the task
+
+    schema = {
+        'question_template': 'str',
+        'side_a': 'str',
+        'side_b': 'str',
+        'side_c': 'str',
+        'angle_A': 'str',
+        'angle_B': 'str',
+        'angle_C': 'str'
+    }
+
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, side_range=SIDE_RANGE, angle_range=ANGLE_RANGE, num_splices=10):
+        super().__init__(metadata, seed=seed)
+        self.side_range = side_range
+        self.angle_range = angle_range
+        self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        sides = np.linspace(self.side_range[0], self.side_range[1], self.num_splices)
+        angles = np.linspace(self.angle_range[0], self.angle_range[1], self.num_splices)
+
+        template_breakdown = self.metadata.templates_by_num_params
+
+        for param_count, templates in template_breakdown.items():
+            for template in tqdm(templates, desc="Enumerating templates for Trigonometry tasks"):
+                for a in sides:
+                    for b in sides:
+                        for angle_A in angles:
+                            angle_B = np.degrees(np.arcsin(b * np.sin(np.radians(angle_A)) / a))
+                            task_plan = {
+                                'question_template': template,
+                                'side_a': str(a),
+                                'side_b': str(b),
+                                'angle_A': str(angle_A),
+                                'angle_B': str(angle_B)
+                            }
+                            task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
+        template = task_plan['question_template']
+        side_a = float(task_plan['side_a'])
+        side_b = float(task_plan['side_b'])
+        angle_A = float(task_plan['angle_A'])
+        angle_B = float(task_plan['angle_B'])
+
+        question = template.format(side_a=side_a, side_b=side_b, angle_A=angle_A)
+        answer = str(angle_B)
+        
+        options = []
+        if self.multiple_choice:
+            options.append(str(angle_B))
+            options.append(str(angle_B + np.random.uniform(-5, 5)))
+            options.append(str(angle_A))  # Common mistake
+            options.append(str(angle_B - np.random.uniform(-5, 5)))
+
+        return question, options, answer, self.metadata
+
+
+class GeometricTransformationsGenerator(GeoPlanGenerator):
+    COORDINATE_RANGE = (-10, 10)
+    TRANSFORMATION_TYPES = ['Translation', 'Rotation', 'Scaling']
+
+    schema = {
+        'question_template': 'str',
+        'vertices': 'str',
+        'transformation': 'str',
+        'new_vertices': 'str'
+    }
+
+    def __init__(self, metadata: MathTemplateMetaData, multiple_choice=True, seed=42, coord_range=COORDINATE_RANGE, num_splices=10):
+        super().__init__(metadata, seed=seed)
+        self.coord_range = coord_range
+        self.num_splices = num_splices
+        self.multiple_choice = multiple_choice
+
+    def enumerate_task_plans(self, task_store: TaskStore):
+        coordinates = np.linspace(self.coord_range[0], self.coord_range[1], self.num_splices)
+
+        template_breakdown = self.metadata.templates_by_num_params
+
+        for param_count, templates in template_breakdown.items():
+            for template in tqdm(templates, desc="Enumerating templates for Geometric Transformations"):
+                for tx in coordinates:
+                    for ty in coordinates:
+                        vertices = [(x, y) for x, y in zip(np.random.uniform(self.coord_range[0], self.coord_range[1], 3),
+                                                           np.random.uniform(self.coord_range[0], self.coord_range[1], 3))]  # Random triangle vertices
+                        transformation = np.random.choice(self.TRANSFORMATION_TYPES)
+                        
+                        if transformation == 'Translation':
+                            new_vertices = [(x + tx, y + ty) for x, y in vertices]
+                        elif transformation == 'Rotation':
+                            angle = np.radians(90)  # Fixed 90-degree rotation for simplicity
+                            new_vertices = [(x * np.cos(angle) - y * np.sin(angle), x * np.sin(angle) + y * np.cos(angle)) for x, y in vertices]
+                        elif transformation == 'Scaling':
+                            scale_factor = np.random.uniform(0.5, 2)
+                            new_vertices = [(x * scale_factor, y * scale_factor) for x, y in vertices]
+
+                        task_plan = {
+                            'question_template': template,
+                            'vertices': str(vertices),
+                            'transformation': transformation,
+                            'new_vertices': str(new_vertices)
+                        }
+                        task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, List[str], str, Dict]:
+        template = task_plan['question_template']
+        vertices = eval(task_plan['vertices'])
+        new_vertices = eval(task_plan['new_vertices'])
+
+        question = template.format(vertices=vertices, transformation=task_plan['transformation'])
+        answer = str(new_vertices)
+        
+        options = []
+        if self.multiple_choice:
+            options.append(str(new_vertices))
+            options.append(str([(x + np.random.uniform(-1, 1), y + np.random.uniform(-1, 1)) for x, y in new_vertices]))  # Distractors
+            options.append(str(vertices))  # Original vertices as an incorrect option
+
+        return question, options, answer, self.metadata
