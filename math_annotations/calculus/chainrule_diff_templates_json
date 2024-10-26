@@ -1,0 +1,10 @@
+{
+    "template1": {
+        "text": "Differentiate the function {0} using the chain rule.",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "Apply the chain rule to find the derivative of {0}.",
+        "num_params": 1
+    }
+}

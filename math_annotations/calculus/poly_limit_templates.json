@@ -1,0 +1,10 @@
+{
+    "template1": {
+        "text": "Evaluate the limit of {0} as x approaches {1}.",
+        "num_params": 2
+    },
+    "template2": {
+        "text": "What is the limit of {0} as x approaches {1}?",
+        "num_params": 2
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "template1": {
+        "text": "Integrate the function {0}.",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "Find the indefinite integral of {0} with respect to x.",
+        "num_params": 1
+    }
+}

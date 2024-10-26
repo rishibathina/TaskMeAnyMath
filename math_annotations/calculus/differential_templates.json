@@ -1,0 +1,11 @@
+{
+    "template1": {
+        "text": "Differentiate the function {0}.",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "Find the derivative of the polynomial {0}.",
+        "num_params": 1
+    }
+}
+

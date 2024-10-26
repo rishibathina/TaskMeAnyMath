@@ -2,8 +2,9 @@ NUM_OPTIONS = 4
 
 # MathQA
 
-from geometry_task import *
-from algebra_task import *
+from geometry_task import PointSlopeGenerator, TriangleAreaGenerator, CircleGenerator
+from algebra_task import LinearEquationSystemGenerator, ExponentialDecayGenerator
+
 
 template_to_generator = {
         'point_slope_templates.json': PointSlopeGenerator,
