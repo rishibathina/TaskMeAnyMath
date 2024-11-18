@@ -307,11 +307,278 @@ class ChainRuleDifferentiationGenerator(CalcPlanGenerator):
         
         question = template.format(expression)
         return question, options, answer, self.metadata
+    
+class LogarithmicDifferentiationGenerator(CalcPlanGenerator):
+    schema = {
+        "question_template": "str",
+        "expression": "str",
+    }
 
-template_path = 'math_annotations/calculus/chainrule_diff_templates_json'
+    def __init__(self, metadata, multiple_choice=True, seed=42):
+        self.metadata = metadata
+        self.seed = seed
+        self.multiple_choice = multiple_choice
+        np.random.seed(seed)
+
+    def enumerate_task_plans(self, task_store):
+        expressions = ["ln(x)", "log(x)", "ln(2x)", "log(3x^2)"]
+        template_breakdown = self.metadata.templates_by_num_params
+        for _, templates in template_breakdown.items():
+            for template in templates:
+                for expression in expressions:
+                    task_plan = {
+                        "question_template": template,
+                        "expression": expression
+                    }
+                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan["question_template"]
+        expression = task_plan["expression"]
+
+        if expression == "ln(x)":
+            answer = "1/x"
+        elif expression == "log(x)":
+            answer = "1/(x * ln(10))"
+        elif expression == "ln(2x)":
+            answer = "1/x"
+        elif expression == "log(3x^2)":
+            answer = "2/(x * ln(10))"
+
+        options = {"correct": answer}
+        if self.multiple_choice:
+            incorrect = ["0", "x", f"{expression} * x"]
+            options.update({f"incorrect option {i+1}": val for i, val in enumerate(incorrect)})
+
+        question = template.format(expression)
+        return question, options, answer, self.metadata
+
+class ProductRuleDifferentiationGenerator(CalcPlanGenerator):
+    schema = {
+        "question_template": "str",
+        "functions": "list",
+    }
+
+    def __init__(self, metadata, multiple_choice=True, seed=42):
+        self.metadata = metadata
+        self.seed = seed
+        self.multiple_choice = multiple_choice
+        np.random.seed(seed)
+
+    def enumerate_task_plans(self, task_store):
+        functions = [("x^2", "sin(x)"), ("x^3", "ln(x)"), ("e^x", "cos(x)")]
+        template_breakdown = self.metadata.templates_by_num_params
+        for _, templates in template_breakdown.items():
+            for template in templates:
+                for func1, func2 in functions:
+                    task_plan = {
+                        "question_template": template,
+                        "functions": [func1, func2]
+                    }
+                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan["question_template"]
+        func1, func2 = task_plan["functions"]
+        if func1 == "x^2" and func2 == "sin(x)":
+            answer = "2x*sin(x) + x^2*cos(x)"
+        elif func1 == "x^3" and func2 == "ln(x)":
+            answer = "3x^2*ln(x) + x^3/x"
+        elif func1 == "e^x" and func2 == "cos(x)":
+            answer = "e^x*cos(x) - e^x*sin(x)"
+
+        options = {"correct": answer}
+        if self.multiple_choice:
+            incorrect = ["0", "x*sin(x)", "e^x"]
+            options.update({f"incorrect option {i+1}": val for i, val in enumerate(incorrect)})
+        
+        question = template.format(func1, func2)
+        return question, options, answer, self.metadata
+
+class ExponentialDifferentiationGenerator(CalcPlanGenerator):
+    schema = {
+        "question_template": "str",
+        "expression": "str",
+    }
+
+    def __init__(self, metadata, multiple_choice=True, seed=42):
+        self.metadata = metadata
+        self.seed = seed
+        self.multiple_choice = multiple_choice
+        np.random.seed(seed)
+
+    def enumerate_task_plans(self, task_store):
+        expressions = ["e^x", "2^x", "e^(2x)", "3e^(x^2)"]
+        template_breakdown = self.metadata.templates_by_num_params
+        for _, templates in template_breakdown.items():
+            for template in templates:
+                for expression in expressions:
+                    task_plan = {
+                        "question_template": template,
+                        "expression": expression
+                    }
+                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan["question_template"]
+        expression = task_plan["expression"]
+
+        # Determine the derivative based on the expression
+        if expression == "e^x":
+            answer = "e^x"
+        elif expression == "2^x":
+            answer = "ln(2) * 2^x"
+        elif expression == "e^(2x)":
+            answer = "2e^(2x)"
+        elif expression == "3e^(x^2)":
+            answer = "6xe^(x^2)"
+
+        options = {"correct": answer}
+        if self.multiple_choice:
+            incorrect = ["0", "x", f"2 * {expression}"]
+            options.update({f"incorrect option {i+1}": val for i, val in enumerate(incorrect)})
+        
+        question = template.format(expression)
+        return question, options, answer, self.metadata
+
+class SecondDerivativeGenerator(CalcPlanGenerator):
+    schema = {
+        "question_template": "str",
+        "expression": "str",
+    }
+
+    def __init__(self, metadata, multiple_choice=True, seed=42):
+        self.metadata = metadata
+        self.seed = seed
+        self.multiple_choice = multiple_choice
+        np.random.seed(seed)
+
+    def enumerate_task_plans(self, task_store):
+        expressions = ["x^3", "sin(x)", "cos(x)", "ln(x)"]
+        template_breakdown = self.metadata.templates_by_num_params
+        for _, templates in template_breakdown.items():
+            for template in templates:
+                for expression in expressions:
+                    task_plan = {
+                        "question_template": template,
+                        "expression": expression
+                    }
+                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan["question_template"]
+        expression = task_plan["expression"]
+
+        if expression == "x^3":
+            answer = "6x"
+        elif expression == "sin(x)":
+            answer = "-sin(x)"
+        elif expression == "cos(x)":
+            answer = "-cos(x)"
+        elif expression == "ln(x)":
+            answer = "-1/x^2"
+
+        options = {"correct": answer}
+        if self.multiple_choice:
+            incorrect = ["0", "sin(x)", "cos(x)"]
+            options.update({f"incorrect option {i+1}": val for i, val in enumerate(incorrect)})
+
+        question = template.format(expression)
+        return question, options, answer, self.metadata
+
+
+class IntegrationByPartsGenerator(CalcPlanGenerator):
+    schema = {
+        "question_template": "str",
+        "integrand": "str",
+    }
+
+    def __init__(self, metadata, multiple_choice=True, seed=42):
+        self.metadata = metadata
+        self.seed = seed
+        self.multiple_choice = multiple_choice
+        np.random.seed(seed)
+
+    def enumerate_task_plans(self, task_store):
+        integrands = ["x * e^x", "x * ln(x)", "e^x * sin(x)"]
+        template_breakdown = self.metadata.templates_by_num_params
+        for _, templates in template_breakdown.items():
+            for template in templates:
+                for integrand in integrands:
+                    task_plan = {
+                        "question_template": template,
+                        "integrand": integrand
+                    }
+                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan["question_template"]
+        integrand = task_plan["integrand"]
+        
+        if integrand == "x * e^x":
+            answer = "x * e^x - e^x + C"
+        elif integrand == "x * ln(x)":
+            answer = "(x^2 / 2) * ln(x) - x^2 / 4 + C"
+        elif integrand == "e^x * sin(x)":
+            answer = "(e^x * sin(x) - e^x * cos(x)) / 2 + C"
+        
+        options = {"correct": answer}
+        if self.multiple_choice:
+            incorrect = ["ln(x)", "1/x", "x^2"]
+            options.update({f"incorrect option {i+1}": val for i, val in enumerate(incorrect)})
+        
+        question = template.format(integrand)
+        return question, options, answer, self.metadata
+
+class ImplicitDifferentiationGenerator(CalcPlanGenerator):
+    schema = {
+        "question_template": "str",
+        "equation": "str",
+    }
+
+    def __init__(self, metadata, multiple_choice=True, seed=42):
+        self.metadata = metadata
+        self.seed = seed
+        self.multiple_choice = multiple_choice
+        np.random.seed(seed)
+
+    def enumerate_task_plans(self, task_store):
+        equations = ["x^2 + y^2 = 1", "xy = 1", "x^2 + xy + y^2 = 1"]
+        template_breakdown = self.metadata.templates_by_num_params
+        for _, templates in template_breakdown.items():
+            for template in templates:
+                for equation in equations:
+                    task_plan = {
+                        "question_template": template,
+                        "equation": equation
+                    }
+                    task_store.add(task_plan)
+
+    def _generate_task(self, task_plan) -> Tuple[str, Dict[str, str], str, Dict]:
+        template = task_plan["question_template"]
+        equation = task_plan["equation"]
+        
+        if equation == "x^2 + y^2 = 1":
+            answer = "-x/y"
+        elif equation == "xy = 1":
+            answer = "-y/x"
+        elif equation == "x^2 + xy + y^2 = 1":
+            answer = "(-2x - y) / (2y + x)"
+        
+        options = {"correct": answer}
+        if self.multiple_choice:
+            incorrect = ["1", "x/y", "y/x"]
+            options.update({f"incorrect option {i+1}": val for i, val in enumerate(incorrect)})
+        
+        question = template.format(equation)
+        return question, options, answer, self.metadata
+
+
+
+template_path = 'math_annotations/calculus/implicit_diff_templates.json'
 metadata = MathTemplateMetaData(template_path)
-generator = ChainRuleDifferentiationGenerator(metadata, multiple_choice=True)
-task_store = TaskStore(ChainRuleDifferentiationGenerator.schema)
+generator = ImplicitDifferentiationGenerator(metadata, multiple_choice=True)
+task_store = TaskStore(ImplicitDifferentiationGenerator.schema)
 generator.enumerate_task_plans(task_store)
 all_tasks = task_store.return_df().to_dict(orient='records')
 

@@ -1,0 +1,14 @@
+{
+    "template1": {
+        "text": "Differentiate the exponential function {0}.",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "Find the derivative of the function {0}.",
+        "num_params": 1
+    },
+    "template3": {
+        "text": "What is the derivative of {0}?",
+        "num_params": 1
+    }
+}

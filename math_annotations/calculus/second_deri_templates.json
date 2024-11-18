@@ -1,0 +1,14 @@
+{
+    "template1": {
+        "text": "Find the second derivative of {0}.",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "What is the second derivative of {0}?",
+        "num_params": 1
+    },
+    "template3": {
+        "text": "Calculate the second derivative of {0}.",
+        "num_params": 1
+    }
+}

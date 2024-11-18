@@ -1,0 +1,10 @@
+{
+    "template1": {
+        "text": "Find dy/dx for the equation {0} using implicit differentiation.",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "Apply implicit differentiation to solve for dy/dx in the equation {0}.",
+        "num_params": 1
+    }
+}

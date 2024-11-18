@@ -1,0 +1,23 @@
+{
+    "template1": {
+        "text": "Differentiate the function {0} using logarithmic differentiation.",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "Apply logarithmic differentiation to find the derivative of {0}.",
+        "num_params": 1
+    },
+    "template3": {
+        "text": "Using logarithmic differentiation, compute the derivative of {0}.",
+        "num_params": 1
+    },
+    "template4": {
+        "text": "What is the derivative of {0} using logarithmic differentiation?",
+        "num_params": 1
+    },
+    "template5": {
+        "text": "Find the derivative of {0} with the logarithmic differentiation method.",
+        "num_params": 1
+    }
+}
+

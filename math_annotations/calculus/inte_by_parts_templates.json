@@ -1,0 +1,10 @@
+{
+    "template1": {
+        "text": "Evaluate the integral of {0} using integration by parts.",
+        "num_params": 1
+    },
+    "template2": {
+        "text": "Use integration by parts to solve the integral of {0}.",
+        "num_params": 1
+    }
+}

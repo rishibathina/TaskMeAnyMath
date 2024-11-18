@@ -1,0 +1,10 @@
+{
+    "template1": {
+        "text": "Differentiate the product of {0} and {1} using the product rule.",
+        "num_params": 2
+    },
+    "template2": {
+        "text": "Apply the product rule to find the derivative of {0} * {1}.",
+        "num_params": 2
+    }
+}
